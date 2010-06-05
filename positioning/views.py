@@ -23,7 +23,6 @@ def begin_track(request):
         return HttpResponse(status = 401)
         
 def report(request):
-    print "Entering request"
     try:
         if request.method == 'POST':
             post_data = request.raw_post_data.decode('utf-8')
