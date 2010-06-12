@@ -13,5 +13,6 @@ class Position(models.Model):
     latitude = models.FloatField()
     longitude = models.FloatField()
     altitude = models.FloatField()
+    time = models.DateTimeField()
     track = models.ForeignKey(Track)
     
