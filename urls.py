@@ -15,8 +15,11 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     # (r'^admin/', include(admin.site.urls)),
+    (r'^accounts/login/$', 'django.contrib.auth.views.login'),
+    
     (r'^report/positions$', 'gypsum.positioning.views.report'),
     (r'^report/newtrack$', 'gypsum.positioning.views.begin_track'),
     (r'^tracks/(\d{4})/(\d{2})/(\d{2})/(\d+)/$', 'gypsum.positioning.views.display_track'),
     (r'^tracks/(\d{4})/(\d{2})/(\d{2})/(\d+)/positions$', 'gypsum.positioning.views.get_track_positions'),
+    (r'^tracks/upload$', 'gypsum.positioning.views.upload_track'),
 )

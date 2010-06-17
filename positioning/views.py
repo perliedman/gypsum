@@ -1,9 +1,12 @@
 from django.contrib.auth import authenticate
-from django.http import HttpRequest, HttpResponse
+from django.contrib.auth.decorators import login_required
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.core import serializers
 from django.shortcuts import render_to_response
-import simplejson as json
+from django import forms
+
 from gypsum.positioning.models import Position, Track
+from gypsum.positioning.gpxparser import GPXParser
 import datetime
 
 def begin_track(request):
@@ -48,7 +51,7 @@ def report(request):
         raise e
         
 def display_track(request, year, month, day, number):
-    track = get_track_by_date(year, month, day, number)
+    track = get_track_by_date(int(year), int(month), int(day), int(number))
     if track != None:
         return render_to_response('display_track.html', {'track': track})
     else:
@@ -57,16 +60,46 @@ def display_track(request, year, month, day, number):
 def get_track_positions(request, year, month, day, number):
     track = get_track_by_date(int(year), int(month), int(day), int(number))
     if track != None:
-        return HttpResponse(json.dumps(track.positions()))
+        return HttpResponse(serializers.serialize("json", Position.objects.filter(track = track)))
     else:
         return HttpResponse(status = 404)
 
-def get_track_by_date(year, month, day, number):
+class UploadTrackForm(forms.Form):
+    name = forms.CharField(max_length = 64)
+    track_data = forms.FileField()
+
+@login_required
+def upload_track(request):
+    if request.method == 'POST':
+        form = UploadTrackForm(request.POST, request.FILES)
+        if form.is_valid():
+            time = datetime.datetime.now()
+            gpx = GPXParser(form.cleaned_data['track_data'])
+
+            track = Track(name = form.cleaned_data['name'], created_time = time, owner = request.user)
+            track.save()
+            
+            for gpx_track in gpx.tracks.values():
+                for pos in gpx_track:
+                    pos.track = track
+                    pos.save() 
+
+            return HttpResponseRedirect("%04d/%02d/%02d/%d" % (time.year, time.month, time.day, len(get_tracks_by_date(time.year, time.month, time.day)) - 1))
+    else:
+        form = UploadTrackForm()
+        
+    return render_to_response('upload_track.html', {'form': form})
+
+def get_tracks_by_date(year, month, day):
     d = datetime.datetime(year, month, day)
     d1 = d + datetime.timedelta(1)
-    tracks = Track.objects.filter(created_time__gte = d, created_time__lt = d1)\
+    return Track.objects.filter(created_time__gte = d, created_time__lt = d1)\
         .order_by('created_time')
+
+def get_track_by_date(year, month, day, number):
+    tracks = get_tracks_by_date(year, month, day)
     if len(tracks) > number:
         return tracks[number]
     else:
         return None
+
