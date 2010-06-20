@@ -83,6 +83,8 @@ def get_track_data(request, year, month, day, number):
                 'distance': d,
                 'duration': str(duration),
                 'created_time': track.created_time.strftime('%Y-%M-%d %H:%m:%S'),
+                'elevation_chart_url': track.get_elevation_chart_url(300, 145),
+                'pace_chart_url': track.get_pace_chart_url(300, 145),
                 'positions': positions}
         #return HttpResponse(serializers.serialize("json", data))
         return HttpResponse(jsonencoder.dumps(data), mimetype='application/javascript')
