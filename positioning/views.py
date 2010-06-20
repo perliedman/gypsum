@@ -4,9 +4,13 @@ from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.core import serializers
 from django.shortcuts import render_to_response
 from django import forms
+import jsonencoder
 
 from gypsum.positioning.models import Position, Track
 from gypsum.positioning.gpxparser import GPXParser
+
+from geopy import distance
+
 import datetime
 
 def begin_track(request):
@@ -57,10 +61,31 @@ def display_track(request, year, month, day, number):
     else:
         return HttpResponse(status = 404)
         
-def get_track_positions(request, year, month, day, number):
+def get_track_data(request, year, month, day, number):
     track = get_track_by_date(int(year), int(month), int(day), int(number))
     if track != None:
-        return HttpResponse(serializers.serialize("json", Position.objects.filter(track = track)))
+        positions = Position.objects.filter(track = track)
+        last_pos = None
+        d = 0.0
+        for p in positions:
+            if last_pos != None:
+                d = d + distance.distance((p.latitude, p.longitude), \
+                    (last_pos.latitude, last_pos.longitude)).kilometers
+                
+            last_pos = p
+            
+        if len(positions) > 0:
+            duration = positions[len(positions) - 1].time - positions[0].time
+        else:
+            duration = timedelta(0)
+            
+        data = {'name': track.name,
+                'distance': d,
+                'duration': str(duration),
+                'created_time': track.created_time.strftime('%Y-%M-%d %H:%m:%S'),
+                'positions': positions}
+        #return HttpResponse(serializers.serialize("json", data))
+        return HttpResponse(jsonencoder.dumps(data), mimetype='application/javascript')
     else:
         return HttpResponse(status = 404)
 

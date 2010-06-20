@@ -20,6 +20,6 @@ urlpatterns = patterns('',
     (r'^report/positions$', 'gypsum.positioning.views.report'),
     (r'^report/newtrack$', 'gypsum.positioning.views.begin_track'),
     (r'^tracks/(\d{4})/(\d{2})/(\d{2})/(\d+)/$', 'gypsum.positioning.views.display_track'),
-    (r'^tracks/(\d{4})/(\d{2})/(\d{2})/(\d+)/positions$', 'gypsum.positioning.views.get_track_positions'),
+    (r'^tracks/(\d{4})/(\d{2})/(\d{2})/(\d+)/positions$', 'gypsum.positioning.views.get_track_data'),
     (r'^tracks/upload$', 'gypsum.positioning.views.upload_track'),
 )
