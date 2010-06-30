@@ -20,10 +20,7 @@ def begin_track(request):
 
     user = authenticate(username = username, password = password)
     if user is not None and user.is_active:
-        t = Track()
-        t.name = track_name
-        t.owner = user
-        t.created_time = datetime.datetime.now()
+        t = Track(name = track_name, owner = user, created_time = datetime.datetime.now(), is_open = True)
         t.save()
         
         return HttpResponse("{'track_id': '%s'}" % (t.id,), status = 200)
