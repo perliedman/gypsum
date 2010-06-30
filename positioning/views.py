@@ -33,7 +33,7 @@ def report(request):
             post_data = request.raw_post_data.decode('utf-8')
             data = json.loads(post_data)
             track = Track.objects.get(id=data['track'])
-            if (datetime.now() - track.created_time).days > 0:
+            if (datetime.datetime.now() - track.created_time).days > 0:
                 return HttpResponse('Track is older than one day and closed for reporting.', status = 400)
             
             for pos_doc in data['positions']:
