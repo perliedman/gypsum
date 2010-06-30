@@ -23,7 +23,7 @@ def begin_track(request):
         t = Track()
         t.name = track_name
         t.owner = user
-        t.created_time = datetime.now()
+        t.created_time = datetime.datetime.now()
         t.save()
         
         return HttpResponse("{'track_id': '%s'}" % (t.id,), status = 200)
