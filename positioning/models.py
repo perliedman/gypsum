@@ -9,6 +9,7 @@ from filter import ema
 
 class Track(models.Model):
     name = models.CharField(max_length = 64)
+    date = models.DateField()
     created_time = models.DateTimeField()
     owner = models.ForeignKey(User)
     is_open = models.BooleanField()
@@ -17,6 +18,9 @@ class Track(models.Model):
         return Position.objects.filter(track = self)
     
     def get_pace_chart_url(self, width, height):
+        if len(self.positions()) == 0:
+            return ''
+        
         pace = []
         int_dist = []
         s = 0
@@ -50,7 +54,11 @@ class Track(models.Model):
         return chart.get_url()
     
     def get_elevation_chart_url(self, width, height):
+        if len(self.positions()) == 0:
+            return ''
+        
         int_elevations = [int(elevation) for elevation in ema([p.altitude for p in self.positions()], 20)]
+            
         max_elev = int(max(int_elevations) / 0.95)
         min_elev = int(min(int_elevations) * 0.95)
         
