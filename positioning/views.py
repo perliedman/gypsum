@@ -5,6 +5,7 @@ from django.core import serializers
 from django.shortcuts import render_to_response
 from django import forms
 import jsonencoder
+import simplejson as json
 
 from gypsum.positioning.models import Position, Track
 from gypsum.positioning.gpxparser import GPXParser
