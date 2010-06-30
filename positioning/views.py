@@ -65,27 +65,47 @@ def get_track_data(request, year, month, day, number):
     track = get_track_by_date(int(year), int(month), int(day), int(number))
     if track != None:
         positions = Position.objects.filter(track = track)
+
+        if len(positions) > 0:
+            duration = positions[len(positions) - 1].time - positions[0].time
+            date = positions[0].time.strftime('%Y-%m-%d')
+        else:
+            duration = timedelta(0)
+            date = 'Unknown'
+
         last_pos = None
         d = 0.0
+        last_km_counter = -1
+        last_info_point = positions[0]
+        count = 0
+        info_points = {}
+        
         for p in positions:
             if last_pos != None:
                 d = d + distance.distance((p.latitude, p.longitude), \
                     (last_pos.latitude, last_pos.longitude)).kilometers
-                
+
+            current_kilometer = int(d)
+            if current_kilometer > last_km_counter:
+                info_points[count] = {'distance': current_kilometer, \
+                                'total_time': str(p.time - positions[0].time), \
+                                'last_km': str(p.time - last_info_point.time)}
+                last_info_point = p
+                last_km_counter = current_kilometer
+
             last_pos = p
-            
-        if len(positions) > 0:
-            duration = positions[len(positions) - 1].time - positions[0].time
-        else:
-            duration = timedelta(0)
-            
+            count = count + 1
+                        
         data = {'name': track.name,
                 'distance': d,
+                'date': date,
                 'duration': str(duration),
-                'created_time': track.created_time.strftime('%Y-%M-%d %H:%m:%S'),
+                'created_time': track.created_time.strftime('%Y-%m-%d %H:%M:%S'),
                 'elevation_chart_url': track.get_elevation_chart_url(300, 145),
                 'pace_chart_url': track.get_pace_chart_url(300, 145),
-                'positions': positions}
+                'is_open': track.is_open,
+                'positions': positions,
+                'info_points': info_points}
         #return HttpResponse(serializers.serialize("json", data))
         return HttpResponse(jsonencoder.dumps(data), mimetype='application/javascript')
     else:
@@ -103,7 +123,7 @@ def upload_track(request):
             time = datetime.datetime.now()
             gpx = GPXParser(form.cleaned_data['track_data'])
 
-            track = Track(name = form.cleaned_data['name'], created_time = time, owner = request.user)
+            track = Track(name = form.cleaned_data['name'], created_time = time, owner = request.user, is_open = False)
             track.save()
             
             for gpx_track in gpx.tracks.values():

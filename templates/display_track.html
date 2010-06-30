@@ -36,6 +36,10 @@
         <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
         <script type="text/javascript">
           var map;
+          var trackLine;
+          var points;
+          var infoPoints;
+          var isTrackOpen;
           
           $(document).ready(function() {
             var latlng = new google.maps.LatLng(57.8, 11.9);
@@ -50,19 +54,24 @@
               $("#trackInfo").tabs();
             });
             
-            $.getJSON('positions', function(data) { displayTrackData(data); });
+            updateTrackData();
           });
+          
+          function updateTrackData() {
+            $.getJSON('positions', function(data) { displayTrackData(data); });
+          }
           
           function displayTrackData(data) {
             $("#trackName").text(data['name']);
+            $("#trackDate").text(data['date']);
             $("#trackDistance").text((Math.round(data['distance'] * 100) / 100).toFixed(2) + " km");
             $("#trackDuration").text(data['duration']);
             $("#trackCreationTime").text(data['created_time']);
             $("#paceChart").attr("src", data['pace_chart_url']);
             $("#elevationChart").attr("src", data['elevation_chart_url']);
                               
-            positions = data['positions'];
-            var points = []
+            var positions = data['positions'];
+            points = [];
             var bounds = new google.maps.LatLngBounds();
             $.each(positions, function(index, position) {
                 var latlng = new google.maps.LatLng(position.fields.latitude, position.fields.longitude);
@@ -70,15 +79,47 @@
                 points.push(latlng);
             });
             
-            var path = new google.maps.Polyline({
-                path: points,
+            trackLine = new google.maps.Polyline({
+                path: [],
                 strokeColor: '#ff0000',
                 strokeOpacity: 0.6,
                 strokeWeight: 6
             });
             
-            path.setMap(map);
+            trackLine.setMap(map);
             map.fitBounds(bounds);
+            
+            infoPoints = data.info_points;
+            isTrackOpen = data.is_open;
+            
+            setTimeout(appendPath, 0);
+          }
+          
+          function appendPath() {
+            var path = trackLine.getPath();
+            if (path.length < points.length) {
+                var infoPoint = infoPoints[path.length];
+                if (infoPoint) {
+                    var marker = new google.maps.Marker({
+                        position: points[path.length],
+                        map: map,
+                        title: infoPoint.distance + "km"
+                    });
+                    var infoWindow = new google.maps.InfoWindow({
+                        content: '<em>' + infoPoint.distance + 'km</em><br/>'
+                            + '<em>Total time: ' + infoPoint.total_time + '</em></br/>'
+                            + '<em>Pace last km: ' + infoPoint.last_km + '</em><br/>'                        
+                    });
+                    google.maps.event.addListener(marker, 'click', function() {
+                        infoWindow.open(map, marker);
+                    });
+                }
+                
+                path.insertAt(path.length, points[path.length]);
+                setTimeout(appendPath, 0);
+            } else if (isTrackOpen) {
+                setTimeout(updateTrackData, 30);
+            }
           }
         </script>
     </head>
@@ -95,6 +136,10 @@
                         <tr>
                             <td class="infoHeader">Name:</td>
                             <td id="trackName"></td>
+                        </tr>
+                        <tr>
+                            <td class="infoHeader">Date:</td>
+                            <td id="trackDate"></td>
                         </tr>
                         <tr>
                             <td class="infoHeader">Distance:</td>

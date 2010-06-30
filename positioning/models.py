@@ -11,6 +11,7 @@ class Track(models.Model):
     name = models.CharField(max_length = 64)
     created_time = models.DateTimeField()
     owner = models.ForeignKey(User)
+    is_open = models.BooleanField()
     
     def positions(self):
         return Position.objects.filter(track = self)
@@ -35,10 +36,15 @@ class Track(models.Model):
         
         min_pace = int(min(int_pace) * 0.95)
         max_pace = int(max(int_pace) / 0.95)
+        mid_pace = (max_pace + min_pace) / 2
+        
+        min_pace_str = '%02d:%02d' % (min_pace / 60, min_pace % 60)
+        mid_pace_str = '%02d:%02d' % (mid_pace / 60, mid_pace % 60)
+        max_pace_str = '%02d:%02d' % (max_pace / 60, max_pace % 60)
         
         chart = SimpleLineChart(width, height, y_range = (min_pace, max_pace))
         chart.add_data(int_pace)
-        chart.set_axis_range(Axis.LEFT, min_pace, max_pace)
+        chart.set_axis_labels(Axis.LEFT, [min_pace_str, mid_pace_str, max_pace_str])
         
         return chart.get_url()
     
