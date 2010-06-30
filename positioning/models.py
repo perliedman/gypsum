@@ -27,8 +27,9 @@ class Track(models.Model):
                     (last_p.latitude, last_p.longitude)).kilometers
                 s = s + int(ds * 1000)
                 dt = (p.time - last_p.time).seconds
-                pace.append(dt / ds)
-                int_dist.append(s)
+                if ds > 0:
+                    pace.append(dt / ds)
+                    int_dist.append(s)
                 
             last_p = p
 
