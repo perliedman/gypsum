@@ -29,28 +29,24 @@ def begin_track(request):
         return HttpResponse(status = 401)
         
 def report(request):
-    try:
-        if request.method == 'POST':
-            post_data = request.raw_post_data.decode('utf-8')
-            data = json.loads(post_data)
-            track = Track.objects.get(id=data['track'])
-            if (datetime.datetime.now() - track.created_time).days > 0:
-                return HttpResponse('Track is older than one day and closed for reporting.', status = 400)
-            
-            for pos_doc in data['positions']:
-                p = Position(latitude = pos_doc['lat'], \
-                             longitude = pos_doc['lat'], \
-                             altitude = pos_doc['lat'], \
-                             time = datetime.datetime.fromtimestamp(pos_doc['time'] / 1000), \
-                             track = track)
-                p.save()	
+    if request.method == 'POST':
+        post_data = request.raw_post_data.decode('utf-8')
+        data = json.loads(post_data)
+        track = Track.objects.get(id=data['track'])
+        if (datetime.datetime.now() - track.created_time).days > 0:
+            return HttpResponse('Track is older than one day and closed for reporting.', status = 400)
+        
+        for pos_doc in data['positions']:
+            p = Position(latitude = pos_doc['lat'], \
+                         longitude = pos_doc['lat'], \
+                         altitude = pos_doc['lat'], \
+                         time = datetime.datetime.fromtimestamp(pos_doc['time'] / 1000), \
+                         track = track)
+            p.save()	
 
-            return HttpResponse(status = 200)
-        else:
-            return HttpResponse("Only POST allowed.", status = 400)
-    except Exception, e:
-        print e
-        raise e
+        return HttpResponse(status = 200)
+    else:
+        return HttpResponse("Only POST allowed.", status = 400)
         
 def display_track(request, year, month, day, number):
     track = get_track_by_date(int(year), int(month), int(day), int(number))
