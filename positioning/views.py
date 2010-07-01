@@ -64,10 +64,14 @@ def get_track_data(request, year, month, day, number):
         if len(positions) > 0:
             duration = positions[len(positions) - 1].time - positions[0].time
             date = positions[0].time.strftime('%Y-%m-%d')
+            start_time = positions[0].time.strftime('%H:%M')
+            end_time = positions[len(positions) - 1].time.strftime('%H:%M')
             last_info_point = positions[0]
         else:
             duration = datetime.timedelta(0)
             date = 'Unknown'
+            start_time = ''
+            end_time = ''
 
         last_pos = None
         d = 0.0
@@ -94,6 +98,8 @@ def get_track_data(request, year, month, day, number):
         data = {'name': track.name,
                 'distance': d,
                 'date': date,
+                'start_time': start_time,
+                'end_time': end_time,
                 'duration': str(duration),
                 'created_time': track.created_time.strftime('%Y-%m-%d %H:%M:%S'),
                 'elevation_chart_url': track.get_elevation_chart_url(300, 145),
@@ -101,7 +107,6 @@ def get_track_data(request, year, month, day, number):
                 'is_open': track.is_open,
                 'positions': positions,
                 'info_points': info_points}
-        #return HttpResponse(serializers.serialize("json", data))
         return HttpResponse(jsonencoder.dumps(data), mimetype='application/javascript')
     else:
         return HttpResponse(status = 404)

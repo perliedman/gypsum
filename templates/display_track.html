@@ -66,6 +66,7 @@
             $("#trackDate").text(data['date']);
             $("#trackDistance").text((Math.round(data['distance'] * 100) / 100).toFixed(2) + " km");
             $("#trackDuration").text(data['duration']);
+            $("#trackTime").text(data['start_time'] + " - " + data['end_time'] + ' (UTC)');
             $("#trackCreationTime").text(data['created_time']);
             $("#paceChart").attr("src", data['pace_chart_url']);
             $("#elevationChart").attr("src", data['elevation_chart_url']);
@@ -146,11 +147,15 @@
                             <td id="trackDistance"></td>
                         </tr>
                         <tr>
-                            <td class="infoHeader">Time:</td>
+                            <td class="infoHeader">Duration:</td>
                             <td id="trackDuration"></td>
                         </tr>
                         <tr>
-                            <td class="infoHeader">Saved:</td>
+                            <td class="infoHeader">Time:</td>
+                            <td id="trackTime"></td>
+                        </tr>
+                         <tr>
+                            <td class="infoHeader">Uploaded/created:</td>
                             <td id="trackCreationTime"></td>
                         </tr>
                     </table>
