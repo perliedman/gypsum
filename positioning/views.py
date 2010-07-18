@@ -1,7 +1,9 @@
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.core import serializers
+from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response
 from django import forms
 import jsonencoder
@@ -49,15 +51,25 @@ def report(request):
     else:
         return HttpResponse("Only POST allowed.", status = 400)
         
-def display_track(request, year, month, day, number):
-    track = get_track_by_date(int(year), int(month), int(day), int(number))
+def display_track(request, username, year, month, day, number):
+    user = User.objects.get(username__exact = username)
+    if user == None:
+        print 'No user called "%s".' % username
+        return HttpResponse(status = 404)
+        
+    track = get_track_by_date(user, int(year), int(month), int(day), int(number))
     if track != None:
         return render_to_response('display_track.html', {'track': track})
     else:
         return HttpResponse(status = 404)
         
-def get_track_data(request, year, month, day, number):
-    track = get_track_by_date(int(year), int(month), int(day), int(number))
+def get_track_data(request, username, year, month, day, number):
+    user = User.objects.get(username__exact = username)
+    if user == None:
+        print 'No user called "%s".' % username
+        return HttpResponse(status = 404)
+        
+    track = get_track_by_date(user, int(year), int(month), int(day), int(number))
     if track != None:
         positions = Position.objects.filter(track = track)
 
@@ -119,26 +131,40 @@ def add_gpx_track(name, user, gpx_file):
     gpx = GPXParser(gpx_file)
     
     if len(gpx.tracks.values()) > 0:
-        track = Track(name = name, date = gpx.tracks.values()[0][0].time, created_time = datetime.datetime.now(), owner = user, is_open = False)
-        track.save()
-        
-        for gpx_track in gpx.tracks.values():
-            for pos in gpx_track:
-                pos.track = track
-                pos.save() 
-                                
-        return track
+        gpx_track = gpx.tracks.values()[0]
+        if len(gpx_track) > 0:
+            track = Track(name = name, date = gpx_track[0].time, created_time = datetime.datetime.now(), owner = user, is_open = False)
+            positions = []
+            
+            for gpx_track in gpx.tracks.values():
+                for pos in gpx_track:
+                    positions.append(pos)
+                                    
+            return (track, positions)
+        else:
+            return (None, None)
     else:
-        return None
+        return (None, None)
 
 @login_required
 def upload_track(request):
     if request.method == 'POST':
         form = UploadTrackForm(request.POST, request.FILES)
         if form.is_valid():
-            track = add_gpx_track(form.cleaned_data['name'], request.user, form.cleaned_data['track_data'])
+            (track, positions) = add_gpx_track(form.cleaned_data['name'], request.user, form.cleaned_data['track_data'])
+            if track != None:
+                track.save()
+                for p in positions:
+                    p.track = track
+                    p.save() 
+            
             time = track.date
-            return HttpResponseRedirect("%04d/%02d/%02d/%d" % (time.year, time.month, time.day, len(get_tracks_by_date(time.year, time.month, time.day)) - 1))
+            return HttpResponseRedirect(reverse(display_track, kwargs = {
+                        'username': track.owner.username, 
+                        'year': time.year, 
+                        'month': time.month, 
+                        'day': time.day, 
+                        'number': len(get_tracks_by_date(request.user, time.year, time.month, time.day)) - 1}))
     else:
         form = UploadTrackForm()
         
@@ -155,9 +181,13 @@ def upload_tracks(request):
                 print 'Opening', name
                 f = zip.open(name)
                 try:
-                    t = add_gpx_track(name, request.user, f)
-                    if t != None:
+                    (t, positions) = add_gpx_track(name, request.user, f)
+                    if t != None and len(Track.objects.filter(hash = t.hash)) == 0:
                         track = t
+                        track.save()
+                        for p in positions:
+                            p.track = track
+                            p.save() 
                         print 'Saved track', track.name
                     else:
                         print 'File is not GPX or does not have content:', name
@@ -167,18 +197,18 @@ def upload_tracks(request):
             print 'Done'
             
             time = track.date
-            return HttpResponseRedirect("%04d/%02d/%02d/%d" % (time.year, time.month, time.day, len(get_tracks_by_date(time.year, time.month, time.day)) - 1))
+            return HttpResponseRedirect(reverse('gypsum.positioning.views.display_track', args = [request.user.username, time.year, time.month, time.day, len(get_tracks_by_date(request.user, time.year, time.month, time.day)) - 1]))
     else:
         form = UploadTrackForm()
         
     return render_to_response('upload_track.html', {'form': form})
 
-def get_tracks_by_date(year, month, day):
+def get_tracks_by_date(owner, year, month, day):
     d = datetime.datetime(year, month, day)
-    return Track.objects.filter(date = d).order_by('created_time')
+    return Track.objects.filter(owner = owner, date = d).order_by('created_time')
 
-def get_track_by_date(year, month, day, number):
-    tracks = get_tracks_by_date(year, month, day)
+def get_track_by_date(owner, year, month, day, number):
+    tracks = get_tracks_by_date(owner, year, month, day)
     if len(tracks) > number:
         return tracks[number]
     else:

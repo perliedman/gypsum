@@ -1,5 +1,5 @@
 from django.conf.urls.defaults import *
-import gypsum.positioning.views
+from gypsum.positioning import views
 
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
@@ -17,10 +17,10 @@ urlpatterns = patterns('',
     # (r'^admin/', include(admin.site.urls)),
     (r'^accounts/login/$', 'django.contrib.auth.views.login'),
     
-    (r'^report/positions$', 'gypsum.positioning.views.report'),
-    (r'^report/newtrack$', 'gypsum.positioning.views.begin_track'),
-    (r'^tracks/(\d{4})/(\d{2})/(\d{2})/(\d+)/$', 'gypsum.positioning.views.display_track'),
-    (r'^tracks/(\d{4})/(\d{2})/(\d{2})/(\d+)/positions$', 'gypsum.positioning.views.get_track_data'),
-    (r'^tracks/upload$', 'gypsum.positioning.views.upload_track'),
-    (r'^tracks/upload_multi$', 'gypsum.positioning.views.upload_tracks'),
+    (r'^report/positions$', views.report),
+    (r'^report/newtrack$', views.begin_track),
+    (r'^(\w+)/(\d{4})/(\d{2})/(\d{2})/(\d+)/$', views.display_track),
+    (r'^(\w+)/(\d{4})/(\d{2})/(\d{2})/(\d+)/positions$', views.get_track_data),
+    (r'^upload$', views.upload_track),
+    (r'^upload_multi$', views.upload_tracks),
 )

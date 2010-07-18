@@ -13,9 +13,42 @@ class Track(models.Model):
     created_time = models.DateTimeField()
     owner = models.ForeignKey(User)
     is_open = models.BooleanField()
+    temperature = models.FloatField(null = True)
+    precipitation = models.CharField(null = True, max_length = 32)
+    weather_conditions = models.CharField(null = True, max_length = 32)
+    hash = models.IntegerField()
+    
+    def save(self, *args, **kwargs):
+        self.hash = self.__hash__()
+        super(Track, self).save(*args, **kwargs)
     
     def positions(self):
         return Position.objects.filter(track = self)
+    
+    def center_coordinate(self):
+        positions = self.positions()
+        if len(positions) == 0:
+            raise Exception("Center coordinate can't be calculated for track without positions.")
+    
+        limits = (90, 180 -90, 180)
+        for p in positions:
+            limits[0] = min(limits[0], p.latitude)
+            limits[1] = min(limits[1], p.longitude)
+            limits[2] = max(limits[2], p.latitude)
+            limits[3] = max(limits[3], p.longitude)
+            
+        return limits
+    
+    def __hash__(self):
+        h = hash(self.name) \
+            * 37 + hash(self.date)
+         
+        for p in self.positions()[::50]:
+            h = h + 37 * hash(p.latitude) \
+                + 37 * hash(p.longitude) \
+                + 37 * hash(p.time)
+                
+        return h
     
     def get_pace_chart_url(self, width, height):
         if len(self.positions()) == 0:
