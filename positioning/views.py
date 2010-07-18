@@ -158,13 +158,13 @@ def upload_track(request):
                     p.track = track
                     p.save() 
             
-            time = track.date
-            return HttpResponseRedirect(reverse(display_track, kwargs = {
-                        'username': track.owner.username, 
-                        'year': time.year, 
-                        'month': time.month, 
-                        'day': time.day, 
-                        'number': len(get_tracks_by_date(request.user, time.year, time.month, time.day)) - 1}))
+                time = track.date
+                return HttpResponseRedirect(reverse(display_track, kwargs = {
+                            'username': track.owner.username, 
+                            'year': time.year, 
+                            'month': time.month, 
+                            'day': time.day, 
+                            'number': len(get_tracks_by_date(request.user, time.year, time.month, time.day)) - 1}))
     else:
         form = UploadTrackForm()
         
