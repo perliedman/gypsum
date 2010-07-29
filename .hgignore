@@ -3,3 +3,5 @@ syntax: regexp
 \.pyc$
 syntax: regexp
 \.pyc$
+syntax: regexp
+^gypsum\.db3$
