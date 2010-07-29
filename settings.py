@@ -35,7 +35,7 @@ USE_I18N = True
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-MEDIA_ROOT = '/home/per/Documents/Development/gypsum/upload/'
+MEDIA_ROOT = '/home/per/Documents/workspace/gypsum/upload/'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
@@ -70,7 +70,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    '/home/per/Documents/Development/gypsum/templates',
+    '/home/per/Documents/workspace/gypsum/templates',
 )
 
 INSTALLED_APPS = (

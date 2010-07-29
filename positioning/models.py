@@ -19,11 +19,24 @@ class Track(models.Model):
     hash = models.IntegerField()
     
     def save(self, *args, **kwargs):
-        self.hash = self.__hash__()
+        self.hash = self.__hash__() & (2**32 - 1)
+        print self.hash
         super(Track, self).save(*args, **kwargs)
     
     def positions(self):
         return Position.objects.filter(track = self)
+    
+    def distance(self):
+        d = 0.0
+        last_pos = None
+        for p in self.positions():
+            if last_pos != None:
+                d = d + distance.distance((p.latitude, p.longitude), \
+                    (last_pos.latitude, last_pos.longitude)).kilometers
+                    
+            last_pos = p
+    
+        return d
     
     def center_coordinate(self):
         positions = self.positions()
@@ -48,7 +61,7 @@ class Track(models.Model):
                 + 37 * hash(p.longitude) \
                 + 37 * hash(p.time)
                 
-        return h
+        return int(h)
     
     def get_pace_chart_url(self, width, height):
         if len(self.positions()) == 0:

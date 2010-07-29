@@ -8,7 +8,7 @@ from django.shortcuts import render_to_response
 from django import forms
 import jsonencoder
 import simplejson as json
-from zipfile import ZipFile
+from zipfile import ZipFile, BadZipfile
 
 from gypsum.positioning.models import Position, Track
 from gypsum.positioning.gpxparser import GPXParser
@@ -62,6 +62,20 @@ def display_track(request, username, year, month, day, number):
         return render_to_response('display_track.html', {'track': track})
     else:
         return HttpResponse(status = 404)
+
+def calculate_marker_spacing(track):
+    marker_spacing = 1
+    d = track.distance()
+    count = 0
+    while (int(d / marker_spacing) > 25):
+        if count % 2 == 0:
+            marker_spacing = marker_spacing * 5
+        else:
+            marker_spacing = marker_spacing * 2
+            
+        count = count + 1
+        
+    return marker_spacing 
         
 def get_track_data(request, username, year, month, day, number):
     user = User.objects.get(username__exact = username)
@@ -85,6 +99,8 @@ def get_track_data(request, username, year, month, day, number):
             start_time = ''
             end_time = ''
 
+        marker_spacing = calculate_marker_spacing(track)
+
         last_pos = None
         d = 0.0
         last_km_counter = -1
@@ -96,9 +112,9 @@ def get_track_data(request, username, year, month, day, number):
                 d = d + distance.distance((p.latitude, p.longitude), \
                     (last_pos.latitude, last_pos.longitude)).kilometers
 
-            current_kilometer = int(d)
+            current_kilometer = int(d / marker_spacing)
             if current_kilometer > last_km_counter:
-                info_points[count] = {'distance': current_kilometer, \
+                info_points[count] = {'distance': current_kilometer * marker_spacing, \
                                 'total_time': str(p.time - positions[0].time), \
                                 'last_km': str(p.time - last_info_point.time)}
                 last_info_point = p
@@ -124,80 +140,64 @@ def get_track_data(request, username, year, month, day, number):
         return HttpResponse(status = 404)
 
 class UploadTrackForm(forms.Form):
-    name = forms.CharField(max_length = 64)
     track_data = forms.FileField()
 
-def add_gpx_track(name, user, gpx_file):
+def parse_gpx_tracks(user, gpx_file):
     gpx = GPXParser(gpx_file)
+
+    track_models = []
     
-    if len(gpx.tracks.values()) > 0:
-        gpx_track = gpx.tracks.values()[0]
+    for track_name in gpx.tracks:
+        gpx_track = gpx.tracks[track_name]
         if len(gpx_track) > 0:
-            track = Track(name = name, date = gpx_track[0].time, created_time = datetime.datetime.now(), owner = user, is_open = False)
+            track = Track(name = track_name, date = gpx_track[0].time, created_time = datetime.datetime.now(), owner = user, is_open = False)
             positions = []
             
             for gpx_track in gpx.tracks.values():
                 for pos in gpx_track:
                     positions.append(pos)
                                     
-            return (track, positions)
-        else:
-            return (None, None)
-    else:
-        return (None, None)
-
-@login_required
-def upload_track(request):
-    if request.method == 'POST':
-        form = UploadTrackForm(request.POST, request.FILES)
-        if form.is_valid():
-            (track, positions) = add_gpx_track(form.cleaned_data['name'], request.user, form.cleaned_data['track_data'])
-            if track != None:
-                track.save()
-                for p in positions:
-                    p.track = track
-                    p.save() 
+            track_models.append((track, positions))
             
-                time = track.date
-                return HttpResponseRedirect(reverse(display_track, kwargs = {
-                            'username': track.owner.username, 
-                            'year': time.year, 
-                            'month': time.month, 
-                            'day': time.day, 
-                            'number': len(get_tracks_by_date(request.user, time.year, time.month, time.day)) - 1}))
-    else:
-        form = UploadTrackForm()
-        
-    return render_to_response('upload_track.html', {'form': form})
+    return track_models
+
+def save_track_file(file, user):
+    tracks_positions = parse_gpx_tracks(user, file)
+    track = None
+    for (t, positions) in tracks_positions:
+        if t != None and len(Track.objects.filter(hash = t.hash)) == 0:
+            track = t
+            track.save()
+            for p in positions:
+                p.track = track
+                p.save()
+    
+    return track
 
 @login_required
 def upload_tracks(request):
     if request.method == 'POST':
         form = UploadTrackForm(request.POST, request.FILES)
         if form.is_valid():
-            zip = ZipFile(form.cleaned_data['track_data'])
-            
-            for name in zip.namelist():
-                print 'Opening', name
-                f = zip.open(name)
-                try:
-                    (t, positions) = add_gpx_track(name, request.user, f)
-                    if t != None and len(Track.objects.filter(hash = t.hash)) == 0:
-                        track = t
-                        track.save()
-                        for p in positions:
-                            p.track = track
-                            p.save() 
-                        print 'Saved track', track.name
-                    else:
-                        print 'File is not GPX or does not have content:', name
-                finally:
-                    f.close()
-                    
-            print 'Done'
-            
+            try:
+                zip = ZipFile(form.cleaned_data['track_data'])
+                
+                for name in zip.namelist():
+                    f = zip.open(name)
+                    try:
+                        track = save_track_file(f, request.user)
+                    finally:
+                        f.close()
+            except BadZipfile:
+                track = save_track_file(form.cleaned_data['track_data'], request.user)
+                                
             time = track.date
-            return HttpResponseRedirect(reverse('gypsum.positioning.views.display_track', args = [request.user.username, time.year, time.month, time.day, len(get_tracks_by_date(request.user, time.year, time.month, time.day)) - 1]))
+            return HttpResponseRedirect(reverse(display_track, kwargs = {
+                        'username': track.owner.username, 
+                        'year': time.year, 
+                        'month': '%02d' % time.month, 
+                        'day': '%02d' % time.day, 
+                        'number': len(get_tracks_by_date(request.user, time.year, time.month, time.day)) - 1}))
     else:
         form = UploadTrackForm()
         

@@ -19,8 +19,7 @@ urlpatterns = patterns('',
     
     (r'^report/positions$', views.report),
     (r'^report/newtrack$', views.begin_track),
-    (r'^(\w+)/(\d{4})/(\d{2})/(\d{2})/(\d+)/$', views.display_track),
-    (r'^(\w+)/(\d{4})/(\d{2})/(\d{2})/(\d+)/positions$', views.get_track_data),
-    (r'^upload$', views.upload_track),
-    (r'^upload_multi$', views.upload_tracks),
+    (r'^(?P<username>\w+)/(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>\d{2})/(?P<number>\d+)/$', views.display_track),
+    (r'^(?P<username>\w+)/(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>\d{2})/(?P<number>\d+)/positions$', views.get_track_data),
+    (r'^upload$', views.upload_tracks),
 )
