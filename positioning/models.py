@@ -19,8 +19,6 @@ class Track(models.Model):
     hash = models.IntegerField()
     
     def save(self, *args, **kwargs):
-        self.hash = self.__hash__() & (2**32 - 1)
-        print self.hash
         super(Track, self).save(*args, **kwargs)
     
     def positions(self):
@@ -53,15 +51,19 @@ class Track(models.Model):
         return limits
     
     def __hash__(self):
-        h = hash(self.name) \
-            * 37 + hash(self.date)
+        return Track._hash(self, self.positions())
+
+    @classmethod
+    def _hash(clss, track, positions):
+        h = hash(track.name) \
+            * 37 + hash(track.date)
          
-        for p in self.positions()[::50]:
+        for p in positions[::50]:
             h = h + 37 * hash(p.latitude) \
                 + 37 * hash(p.longitude) \
                 + 37 * hash(p.time)
                 
-        return int(h)
+        return int(h & (2**32 - 1))
     
     def get_pace_chart_url(self, width, height):
         if len(self.positions()) == 0:

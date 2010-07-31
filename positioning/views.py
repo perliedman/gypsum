@@ -150,7 +150,8 @@ def parse_gpx_tracks(user, gpx_file):
     for track_name in gpx.tracks:
         gpx_track = gpx.tracks[track_name]
         if len(gpx_track) > 0:
-            track = Track(name = track_name, date = gpx_track[0].time, created_time = datetime.datetime.now(), owner = user, is_open = False)
+            t = gpx_track[0].time
+            track = Track(name = track_name, date = datetime.date(t.year, t.month, t.day), created_time = datetime.datetime.now(), owner = user, is_open = False)
             positions = []
             
             for gpx_track in gpx.tracks.values():
@@ -163,41 +164,48 @@ def parse_gpx_tracks(user, gpx_file):
 
 def save_track_file(file, user):
     tracks_positions = parse_gpx_tracks(user, file)
-    track = None
+    tracks = []
     for (t, positions) in tracks_positions:
-        if t != None and len(Track.objects.filter(hash = t.hash)) == 0:
-            track = t
-            track.save()
+        # The track's hash isn't calculated automatically, so hash it explicitly
+        t.hash = Track._hash(t, positions)
+        if len(Track.objects.filter(hash = t.hash)) == 0:
+            t.save()
             for p in positions:
-                p.track = track
+                p.track = t
                 p.save()
-    
-    return track
+            tracks.append(t)
+
+    return tracks
 
 @login_required
 def upload_tracks(request):
     if request.method == 'POST':
         form = UploadTrackForm(request.POST, request.FILES)
         if form.is_valid():
+            tracks = None
+            uploaded_file = form.cleaned_data['track_data']
             try:
-                zip = ZipFile(form.cleaned_data['track_data'])
+                zip = ZipFile(uploaded_file)
                 
                 for name in zip.namelist():
                     f = zip.open(name)
                     try:
-                        track = save_track_file(f, request.user)
+                        tracks = save_track_file(f, request.user)
                     finally:
                         f.close()
             except BadZipfile:
-                track = save_track_file(form.cleaned_data['track_data'], request.user)
-                                
-            time = track.date
-            return HttpResponseRedirect(reverse(display_track, kwargs = {
-                        'username': track.owner.username, 
-                        'year': time.year, 
-                        'month': '%02d' % time.month, 
-                        'day': '%02d' % time.day, 
-                        'number': len(get_tracks_by_date(request.user, time.year, time.month, time.day)) - 1}))
+                uploaded_file.seek(0)
+                tracks = save_track_file(uploaded_file, request.user)
+                      
+            if len(tracks) > 0:
+                track = tracks[len(tracks) - 1]
+                time = track.date
+                return HttpResponseRedirect(reverse(display_track, kwargs = {
+                            'username': track.owner.username, 
+                            'year': time.year, 
+                            'month': '%02d' % time.month, 
+                            'day': '%02d' % time.day, 
+                            'number': len(get_tracks_by_date(request.user, time.year, time.month, time.day)) - 1}))
     else:
         form = UploadTrackForm()
         
