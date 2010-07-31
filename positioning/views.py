@@ -65,7 +65,7 @@ def display_track(request, username, year, month, day, number):
 
 def calculate_marker_spacing(track):
     marker_spacing = 1
-    d = track.distance()
+    d = track.distance
     count = 0
     while (int(d / marker_spacing) > 25):
         if count % 2 == 0:
@@ -77,6 +77,35 @@ def calculate_marker_spacing(track):
         
     return marker_spacing 
         
+def create_markers(track):
+    marker_spacing = calculate_marker_spacing(track)
+
+    last_pos = None
+    d = 0.0
+    last_km_counter = -1
+    count = 0
+    info_points = {}
+    positions = track.positions()
+    last_info_point = positions[0]
+    
+    for p in positions:
+        if last_pos != None:
+            d = d + distance.distance((p.latitude, p.longitude), \
+                (last_pos.latitude, last_pos.longitude)).kilometers
+
+        current_kilometer = int(d / marker_spacing)
+        if current_kilometer > last_km_counter:
+            info_points[count] = {'distance': current_kilometer * marker_spacing, \
+                            'total_time': str(p.time - positions[0].time), \
+                            'last_km': str(p.time - last_info_point.time)}
+            last_info_point = p
+            last_km_counter = current_kilometer
+
+        last_pos = p
+        count = count + 1
+        
+    return info_points
+        
 def get_track_data(request, username, year, month, day, number):
     user = User.objects.get(username__exact = username)
     if user == None:
@@ -85,46 +114,23 @@ def get_track_data(request, username, year, month, day, number):
         
     track = get_track_by_date(user, int(year), int(month), int(day), int(number))
     if track != None:
-        positions = Position.objects.filter(track = track)
+        positions = track.positions()
 
         if len(positions) > 0:
             duration = positions[len(positions) - 1].time - positions[0].time
             date = positions[0].time.strftime('%Y-%m-%d')
             start_time = positions[0].time.strftime('%H:%M')
             end_time = positions[len(positions) - 1].time.strftime('%H:%M')
-            last_info_point = positions[0]
+            markers = create_markers(track)
         else:
             duration = datetime.timedelta(0)
             date = 'Unknown'
             start_time = ''
             end_time = ''
-
-        marker_spacing = calculate_marker_spacing(track)
-
-        last_pos = None
-        d = 0.0
-        last_km_counter = -1
-        count = 0
-        info_points = {}
-        
-        for p in positions:
-            if last_pos != None:
-                d = d + distance.distance((p.latitude, p.longitude), \
-                    (last_pos.latitude, last_pos.longitude)).kilometers
-
-            current_kilometer = int(d / marker_spacing)
-            if current_kilometer > last_km_counter:
-                info_points[count] = {'distance': current_kilometer * marker_spacing, \
-                                'total_time': str(p.time - positions[0].time), \
-                                'last_km': str(p.time - last_info_point.time)}
-                last_info_point = p
-                last_km_counter = current_kilometer
-
-            last_pos = p
-            count = count + 1
+            markers = {}
                         
         data = {'name': track.name,
-                'distance': d,
+                'distance': track.distance,
                 'date': date,
                 'start_time': start_time,
                 'end_time': end_time,
@@ -134,7 +140,7 @@ def get_track_data(request, username, year, month, day, number):
                 'pace_chart_url': track.get_pace_chart_url(300, 145),
                 'is_open': track.is_open,
                 'positions': positions,
-                'info_points': info_points}
+                'info_points': markers}
         return HttpResponse(jsonencoder.dumps(data), mimetype='application/javascript')
     else:
         return HttpResponse(status = 404)
@@ -151,12 +157,23 @@ def parse_gpx_tracks(user, gpx_file):
         gpx_track = gpx.tracks[track_name]
         if len(gpx_track) > 0:
             t = gpx_track[0].time
-            track = Track(name = track_name, date = datetime.date(t.year, t.month, t.day), created_time = datetime.datetime.now(), owner = user, is_open = False)
+            track = Track(name = track_name, 
+                date = datetime.date(t.year, t.month, t.day), 
+                created_time = datetime.datetime.now(), 
+                owner = user, 
+                distance = 0, 
+                is_open = False)
             positions = []
+            last_pos = None
             
-            for gpx_track in gpx.tracks.values():
-                for pos in gpx_track:
-                    positions.append(pos)
+            for pos in gpx_track:
+                positions.append(pos)
+                
+                if last_pos != None:
+                    track.distance = track.distance + distance.distance((pos.latitude, pos.longitude), \
+                        (last_pos.latitude, last_pos.longitude)).kilometers
+                        
+                last_pos = pos
                                     
             track_models.append((track, positions))
             
@@ -170,9 +187,12 @@ def save_track_file(file, user):
         t.hash = Track._hash(t, positions)
         if len(Track.objects.filter(hash = t.hash)) == 0:
             t.save()
+            d = 0.0
+            last_pos = None
             for p in positions:
                 p.track = t
                 p.save()
+                         
             tracks.append(t)
 
     return tracks

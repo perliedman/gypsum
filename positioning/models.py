@@ -13,6 +13,7 @@ class Track(models.Model):
     created_time = models.DateTimeField()
     owner = models.ForeignKey(User)
     is_open = models.BooleanField()
+    distance = models.FloatField()
     temperature = models.FloatField(null = True)
     precipitation = models.CharField(null = True, max_length = 32)
     weather_conditions = models.CharField(null = True, max_length = 32)
@@ -22,20 +23,10 @@ class Track(models.Model):
         super(Track, self).save(*args, **kwargs)
     
     def positions(self):
-        return Position.objects.filter(track = self)
-    
-    def distance(self):
-        d = 0.0
-        last_pos = None
-        for p in self.positions():
-            if last_pos != None:
-                d = d + distance.distance((p.latitude, p.longitude), \
-                    (last_pos.latitude, last_pos.longitude)).kilometers
-                    
-            last_pos = p
-    
-        return d
-    
+        if not hasattr(self, '_positions'):
+            self._positions = Position.objects.filter(track = self)
+        return self._positions
+        
     def center_coordinate(self):
         positions = self.positions()
         if len(positions) == 0:
