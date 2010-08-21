@@ -1,0 +1,41 @@
+<html>
+    <head>
+        <title>{{ user.get_full_name }}'s timeline - Gypsum</title>
+        <link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/base/jquery-ui.css"/>
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.min.js"></script>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                $("#accordion").accordion({ autoHeight: false });
+            });
+        </script>
+    </head>
+    
+    <body>
+        <h1>{{ user.get_full_name }}'s timeline</h1>
+        <div id="accordion">
+        {% for month in months %}
+            <h3>
+                <a href="#">{{ month.year }}-{{ month.month }} - 
+                {% for activity,record in month.activities.items %}
+                    <em>{{ activity.name }}: {{ record.distance|floatformat:0 }} km</em>
+                {% endfor %}
+                </a>
+            </h3>
+            <div>
+                <ul>
+                {% for activity,record in month.activities.items %}
+                    <li>{{ activity.name }}
+                        <ul>
+                            {% for track in record.tracks %}
+                                <li><a href="{{ track.url }}">{{ track.date }}</a> - {{ track.distance|floatformat:1}} km</li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+                </ul>
+            </div>
+        {% endfor %}
+        </div>
+    </body>
+</html>

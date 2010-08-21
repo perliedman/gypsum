@@ -10,7 +10,7 @@ import jsonencoder
 import simplejson as json
 from zipfile import ZipFile, BadZipfile
 
-from gypsum.positioning.models import Position, Track
+from gypsum.positioning.models import Position, Track, Activity
 from gypsum.positioning.gpxparser import GPXParser
 
 from geopy import distance
@@ -117,13 +117,11 @@ def get_track_data(request, username, year, month, day, number):
         positions = track.positions()
 
         if len(positions) > 0:
-            duration = positions[len(positions) - 1].time - positions[0].time
             date = positions[0].time.strftime('%Y-%m-%d')
             start_time = positions[0].time.strftime('%H:%M')
             end_time = positions[len(positions) - 1].time.strftime('%H:%M')
             markers = create_markers(track)
         else:
-            duration = datetime.timedelta(0)
             date = 'Unknown'
             start_time = ''
             end_time = ''
@@ -134,7 +132,7 @@ def get_track_data(request, username, year, month, day, number):
                 'date': date,
                 'start_time': start_time,
                 'end_time': end_time,
-                'duration': str(duration),
+                'duration': str(datetime.timedelta(seconds = track.time)),
                 'created_time': track.created_time.strftime('%Y-%m-%d %H:%M:%S'),
                 'elevation_chart_url': track.get_elevation_chart_url(300, 145),
                 'pace_chart_url': track.get_pace_chart_url(300, 145),
@@ -144,6 +142,42 @@ def get_track_data(request, username, year, month, day, number):
         return HttpResponse(jsonencoder.dumps(data), mimetype='application/javascript')
     else:
         return HttpResponse(status = 404)
+
+def user_timeline(request, username):
+    user = User.objects.get(username__exact = username)
+    tracks = Track.objects.filter(owner = user).order_by('date').reverse()
+    months = []
+    current_month = None
+    last_date = None
+    day_track_count = 0
+    for track in tracks:
+        if track.date == last_date:
+            day_track_count = day_track_count + 1
+        else:
+            day_track_count = 0
+            last_date = track.date
+
+        track.url = '%s/%d/' % (track.date.strftime('%Y/%m/%d'), day_track_count)
+    
+        if current_month == None or current_month['year'] != track.date.year or current_month['month'] != track.date.month:
+            activities = {track.activity: {'distance': track.distance,
+                                           'tracks': [track]}}
+
+            current_month = {'year': track.date.year,
+                             'month': track.date.month,
+                             'activities': activities}
+            months.append(current_month)
+        else:
+            if current_month['activities'].has_key(track.activity):
+                activity_record = current_month['activities'][track.activity]
+            else:
+                activity_record = {'distance': 0.0, 'tracks': []}
+                current_month['activities'][track.activity] = activity_record
+        
+            activity_record['distance'] = activity_record['distance'] + track.distance
+            activity_record['tracks'].append(track)
+    
+    return render_to_response('user_timeline.html', {'user': user, 'months': months})    
 
 class UploadTrackForm(forms.Form):
     track_data = forms.FileField()
@@ -156,12 +190,20 @@ def parse_gpx_tracks(user, gpx_file):
     for track_name in gpx.tracks:
         gpx_track = gpx.tracks[track_name]
         if len(gpx_track) > 0:
+            if not track_name.isdigit() and len(track_name) > 0:
+                given_name = track_name
+            else:
+                given_name = None
+        
             t = gpx_track[0].time
-            track = Track(name = track_name, 
+            duration = gpx_track[len(gpx_track) - 1].time - t
+
+            track = Track(name = given_name, 
                 date = datetime.date(t.year, t.month, t.day), 
                 created_time = datetime.datetime.now(), 
                 owner = user, 
-                distance = 0, 
+                distance = 0,
+                time = duration.seconds,    # TODO: this will break for tracks longer than a day!
                 is_open = False)
             positions = []
             last_pos = None
@@ -174,6 +216,11 @@ def parse_gpx_tracks(user, gpx_file):
                         (last_pos.latitude, last_pos.longitude)).kilometers
                         
                 last_pos = pos
+                
+            avg_speed_kmh = track.distance / (duration.seconds / 3600.0) # TODO: this will break for tracks longer than a day!
+            for activity in Activity.objects.order_by('max_speed').reverse():
+                if avg_speed_kmh <= activity.max_speed:
+                    track.activity = activity
                                     
             track_models.append((track, positions))
             
@@ -195,7 +242,7 @@ def save_track_file(file, user):
                          
             tracks.append(t)
 
-    return tracks
+    return (tracks, len(tracks_positions))
 
 @login_required
 def upload_tracks(request):
@@ -204,28 +251,25 @@ def upload_tracks(request):
         if form.is_valid():
             tracks = None
             uploaded_file = form.cleaned_data['track_data']
+            total_read_tracks = 0
             try:
                 zip = ZipFile(uploaded_file)
-                
+                tracks = []
                 for name in zip.namelist():
                     f = zip.open(name)
                     try:
-                        tracks = save_track_file(f, request.user)
+                        (saved_tracks, number_read_tracks) = save_track_file(f, request.user)
+                        tracks.extend(saved_tracks)
+                        total_read_tracks = total_read_tracks + number_read_tracks
                     finally:
                         f.close()
             except BadZipfile:
                 uploaded_file.seek(0)
-                tracks = save_track_file(uploaded_file, request.user)
+                (tracks, total_read_tracks) = save_track_file(uploaded_file, request.user)
                       
             if len(tracks) > 0:
-                track = tracks[len(tracks) - 1]
-                time = track.date
-                return HttpResponseRedirect(reverse(display_track, kwargs = {
-                            'username': track.owner.username, 
-                            'year': time.year, 
-                            'month': '%02d' % time.month, 
-                            'day': '%02d' % time.day, 
-                            'number': len(get_tracks_by_date(request.user, time.year, time.month, time.day)) - 1}))
+                return HttpResponseRedirect(reverse(user_timeline, 
+                                            kwargs = {'username': tracks[len(tracks) - 1].owner.username}))
     else:
         form = UploadTrackForm()
         

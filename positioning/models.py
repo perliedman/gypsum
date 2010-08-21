@@ -7,17 +7,30 @@ from pygooglechart import SimpleLineChart, Axis
 from geopy import distance
 from filter import ema
 
+class Activity(models.Model):
+    name = models.CharField(max_length = 32)
+    icon_url = models.CharField(max_length = 255)
+    max_speed = models.FloatField()
+
+    def __unicode__(self):
+        return self.name
+
 class Track(models.Model):
-    name = models.CharField(max_length = 64)
+    name = models.CharField(max_length = 64, null = True)
+    activity = models.ForeignKey(Activity, null = True)
     date = models.DateField()
     created_time = models.DateTimeField()
     owner = models.ForeignKey(User)
     is_open = models.BooleanField()
     distance = models.FloatField()
+    time = models.IntegerField()
     temperature = models.FloatField(null = True)
     precipitation = models.CharField(null = True, max_length = 32)
     weather_conditions = models.CharField(null = True, max_length = 32)
     hash = models.IntegerField()
+
+    def __unicode__(self):
+        return "%s's %s on %s, %.1f km" % (self.owner.get_full_name(), str(self.activity), self.date.strftime('%Y-%m-%d'), self.distance)
     
     def save(self, *args, **kwargs):
         super(Track, self).save(*args, **kwargs)
