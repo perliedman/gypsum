@@ -41,7 +41,7 @@ class Track(models.Model):
         return "%s's %s on %s, %.1f km, %s" % \
             (self.owner.get_full_name(), str(self.activity), 
              self.date.strftime('%Y-%m-%d'), self.distance,
-             str(timedelta(seconds = self.time)))
+             str(datetime.timedelta(seconds = self.time)))
     
     def save(self, *args, **kwargs):
         super(Track, self).save(*args, **kwargs)
@@ -78,7 +78,7 @@ class Track(models.Model):
                 + 37 * hash(p.longitude) \
                 + 37 * hash(p.time)
                 
-        return int(h & (2**32 - 1))
+        return int(h & (2**31 - 1))
     
     def get_pace_chart_url(self, width, height):
         if len(self.positions()) == 0:
