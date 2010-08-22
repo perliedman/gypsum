@@ -180,7 +180,9 @@ def user_timeline(request, username):
     return render_to_response('user_timeline.html', {'user': user, 'months': months})    
 
 class UploadTrackForm(forms.Form):
-    track_data = forms.FileField()
+    track_data = forms.FileField(label = 'File to upload', 
+        help_text = 'The file to upload. The file must be a GPX file, or a ZIP file containing GPX files.')
+    only_newer = forms.BooleanField(label = 'Store only newer', initial = True)
 
 def parse_gpx_tracks(user, gpx_file):
     gpx = GPXParser(gpx_file)
@@ -226,13 +228,13 @@ def parse_gpx_tracks(user, gpx_file):
             
     return track_models
 
-def save_track_file(file, user):
+def save_track_file(file, user, only_after):
     tracks_positions = parse_gpx_tracks(user, file)
     tracks = []
     for (t, positions) in tracks_positions:
         # The track's hash isn't calculated automatically, so hash it explicitly
         t.hash = Track._hash(t, positions)
-        if len(Track.objects.filter(hash = t.hash)) == 0:
+        if (only_after == None or t.date > only_after) and len(Track.objects.filter(owner = user, hash = t.hash)) == 0:
             t.save()
             d = 0.0
             last_pos = None
@@ -251,6 +253,13 @@ def upload_tracks(request):
         if form.is_valid():
             tracks = None
             uploaded_file = form.cleaned_data['track_data']
+
+            only_after = None            
+            if form.cleaned_data['only_newer']:
+                tracks = Track.objects.filter(owner = request.user).order_by('date').reverse()
+                if len(tracks) > 0:
+                    only_after = tracks[0].date
+            
             total_read_tracks = 0
             try:
                 zip = ZipFile(uploaded_file)
@@ -258,14 +267,14 @@ def upload_tracks(request):
                 for name in zip.namelist():
                     f = zip.open(name)
                     try:
-                        (saved_tracks, number_read_tracks) = save_track_file(f, request.user)
+                        (saved_tracks, number_read_tracks) = save_track_file(f, request.user, only_after)
                         tracks.extend(saved_tracks)
                         total_read_tracks = total_read_tracks + number_read_tracks
                     finally:
                         f.close()
             except BadZipfile:
                 uploaded_file.seek(0)
-                (tracks, total_read_tracks) = save_track_file(uploaded_file, request.user)
+                (tracks, total_read_tracks) = save_track_file(uploaded_file, request.user, only_after)
                       
             if len(tracks) > 0:
                 return HttpResponseRedirect(reverse(user_timeline, 
