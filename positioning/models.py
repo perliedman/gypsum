@@ -24,7 +24,7 @@ class Activity(models.Model):
             return "%d:%02d" % (int(seconds_per_km) / 60, int(seconds_per_km) % 60)
         
 class Track(models.Model):
-    name = models.CharField(max_length = 64, null = True)
+    name = models.CharField(max_length = 64, null = True, blank = True)
     activity = models.ForeignKey(Activity, null = True)
     date = models.DateField()
     created_time = models.DateTimeField()
@@ -32,9 +32,9 @@ class Track(models.Model):
     is_open = models.BooleanField()
     distance = models.FloatField()
     time = models.IntegerField()
-    temperature = models.FloatField(null = True)
-    precipitation = models.CharField(null = True, max_length = 32)
-    weather_conditions = models.CharField(null = True, max_length = 32)
+    temperature = models.FloatField(null = True, blank = True)
+    precipitation = models.CharField(null = True, max_length = 32, blank = True)
+    weather_conditions = models.CharField(null = True, max_length = 32, blank = True)
     hash = models.IntegerField()
 
     def __unicode__(self):
