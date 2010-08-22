@@ -145,7 +145,7 @@ def get_track_data(request, username, year, month, day, number):
 
 def start_page(request):
     users = User.objects.order_by('first_name', 'last_name')
-    last_tracks = Track.objects.order_by('date')[:10]
+    last_tracks = Track.objects.order_by('date').reverse()[:10]
     return render_to_response('start_page.html', {'users': users, 'tracks': last_tracks})
 
 def user_timeline(request, username):
