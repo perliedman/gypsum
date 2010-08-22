@@ -11,10 +11,18 @@ class Activity(models.Model):
     name = models.CharField(max_length = 32)
     icon_url = models.CharField(max_length = 255)
     max_speed = models.FloatField()
+    speed_format = models.CharField(choices = (('km_h', 'km/h'),('min_km', 'minutes/km')), max_length = 6)
 
     def __unicode__(self):
         return self.name
-
+        
+    def format_speed(self, distance_km, time_seconds):
+        if speed_format == 'km_h':
+            return "%.0f" % (distance_km / (time_seconds / 3600.0))
+        elif speed_format == 'min_km':
+            seconds_per_km = time_seconds / distance_km
+            return "%d:%02d" % (int(seconds_per_km) / 60, int(seconds_per_km) % 60)
+        
 class Track(models.Model):
     name = models.CharField(max_length = 64, null = True)
     activity = models.ForeignKey(Activity, null = True)
@@ -30,7 +38,10 @@ class Track(models.Model):
     hash = models.IntegerField()
 
     def __unicode__(self):
-        return "%s's %s on %s, %.1f km" % (self.owner.get_full_name(), str(self.activity), self.date.strftime('%Y-%m-%d'), self.distance)
+        return "%s's %s on %s, %.1f km, %s" % \
+            (self.owner.get_full_name(), str(self.activity), 
+             self.date.strftime('%Y-%m-%d'), self.distance,
+             str(timedelta(seconds = self.time)))
     
     def save(self, *args, **kwargs):
         super(Track, self).save(*args, **kwargs)

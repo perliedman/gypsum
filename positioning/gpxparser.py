@@ -25,5 +25,9 @@ class GPXParser:
         lon = float(trkpt.getAttribute('lon'))
         ele = float(trkpt.getElementsByTagName('ele')[0].firstChild.data)
         rfc3339 = trkpt.getElementsByTagName('time')[0].firstChild.data
-        self.tracks[name].append(Position(latitude = lat, longitude = lon, altitude = ele, time = datetime.datetime.strptime(rfc3339, '%Y-%m-%dT%H:%M:%S.%fZ')))
+        try:
+            t = datetime.datetime.strptime(rfc3339, '%Y-%m-%dT%H:%M:%S.%fZ')
+        except ValueError:
+            t = datetime.datetime.strptime(rfc3339, '%Y-%m-%dT%H:%M:%SZ')
+        self.tracks[name].append(Position(latitude = lat, longitude = lon, altitude = ele, time = t))
 
