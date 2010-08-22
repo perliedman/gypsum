@@ -143,6 +143,11 @@ def get_track_data(request, username, year, month, day, number):
     else:
         return HttpResponse(status = 404)
 
+def start_page(request):
+    users = User.objects.order_by('first_name', 'last_name')
+    last_tracks = Track.objects.order_by('date')[:10]
+    return render_to_response('start_page.html', {'users': users, 'tracks': last_tracks})
+
 def user_timeline(request, username):
     user = User.objects.get(username__exact = username)
     tracks = Track.objects.filter(owner = user).order_by('date').reverse()

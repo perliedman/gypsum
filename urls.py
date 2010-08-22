@@ -17,6 +17,7 @@ urlpatterns = patterns('',
     (r'^admin/', include(admin.site.urls)),
     (r'^accounts/login/$', 'django.contrib.auth.views.login'),
     
+    (r'^$', views.start_page),
     (r'^report/positions$', views.report),
     (r'^report/newtrack$', views.begin_track),
     (r'^(?P<username>\w+)/timeline$', views.user_timeline),
