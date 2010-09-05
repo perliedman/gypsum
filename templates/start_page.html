@@ -1,19 +1,21 @@
+{% load avatar_tags %}
 <html>
     <head>
         <title>Gypsum</title>
-        <link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/base/jquery-ui.css"/>
+        <link rel="stylesheet" type="text/css" href="style/base.css"/>
+        <!--<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/base/jquery-ui.css"/>
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
-        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.min.js"></script>
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.min.js"></script>-->
     </head>
     
     <body>
         <h1>Gypsum</h1>
         <div>
-            <h2>Latest tracks</h2>
+            <h2>Latest</h2>
             <ul>
             {% for track in tracks %}
                 <li>
-                    {{ track }}
+                    {{ track.date }}: <a href="{{ track.owner.username }}/timeline">{% avatar track.owner 32 %} {{ track.owner.get_full_name }}</a>, {{ track.activity }}, {{ track.distance|floatformat:1 }} km
                 </li>
             {% endfor %}
             </ul>

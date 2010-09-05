@@ -97,7 +97,7 @@ def create_markers(track):
         if current_kilometer > last_km_counter:
             info_points[count] = {'distance': current_kilometer * marker_spacing, \
                             'total_time': str(p.time - positions[0].time), \
-                            'last_km': str(p.time - last_info_point.time)}
+                            'pace': '%s %s' % (track.activity.format_speed(current_kilometer - last_km_counter, (p.time - last_info_point.time).seconds), track.activity.get_speed_format_display())}
             last_info_point = p
             last_km_counter = current_kilometer
 
@@ -133,6 +133,7 @@ def get_track_data(request, username, year, month, day, number):
                 'start_time': start_time,
                 'end_time': end_time,
                 'duration': str(datetime.timedelta(seconds = track.time)),
+                'pace': track.get_pace_string(),
                 'created_time': track.created_time.strftime('%Y-%m-%d %H:%M:%S'),
                 'elevation_chart_url': track.get_elevation_chart_url(300, 145),
                 'pace_chart_url': track.get_pace_chart_url(300, 145),

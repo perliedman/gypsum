@@ -17,11 +17,16 @@ class Activity(models.Model):
         return self.name
         
     def format_speed(self, distance_km, time_seconds):
-        if speed_format == 'km_h':
-            return "%.0f" % (distance_km / (time_seconds / 3600.0))
-        elif speed_format == 'min_km':
-            seconds_per_km = time_seconds / distance_km
-            return "%d:%02d" % (int(seconds_per_km) / 60, int(seconds_per_km) % 60)
+        try:
+            if self.speed_format == 'km_h':
+                return "%.0f" % (distance_km / (time_seconds / 3600.0))
+            elif self.speed_format == 'min_km':
+                seconds_per_km = time_seconds / distance_km
+                return "%d:%02d" % (int(seconds_per_km) / 60, int(seconds_per_km) % 60)
+            else:
+                raise Exception('Unknown speed format "%s".' % self.speed_format) 
+        except ZeroDivisionError:
+            return '-'
         
 class Track(models.Model):
     name = models.CharField(max_length = 64, null = True, blank = True)
@@ -64,6 +69,17 @@ class Track(models.Model):
             limits[3] = max(limits[3], p.longitude)
             
         return limits
+        
+    def get_title(self):
+        if self.name != None and len(self.name) > 0:
+            return self.name
+        else:
+            return "%s's %s - %s" % (self.owner.get_full_name(), self.activity.name, self.date.strftime('%Y-%m-%d'))
+        
+    def get_pace_string(self):
+        return '%s %s' % \
+            (self.activity.format_speed(self.distance, self.time), 
+             self.activity.get_speed_format_display())
     
     def __hash__(self):
         return Track._hash(self, self.positions())
