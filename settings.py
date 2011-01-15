@@ -9,11 +9,11 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-DATABASE_NAME = 'gypsum.db3'             # Or path to database file if using sqlite3.
-DATABASE_USER = ''             # Not used with sqlite3.
-DATABASE_PASSWORD = ''         # Not used with sqlite3.
-DATABASE_HOST = ''             # Set to empty string for localhost. Not used with sqlite3.
+DATABASE_ENGINE = 'mysql'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+DATABASE_NAME = 'gypsum'             # Or path to database file if using sqlite3.
+DATABASE_USER = 'gypsum'             # Not used with sqlite3.
+DATABASE_PASSWORD = '5UzWHZ5TB69XsLcB'         # Not used with sqlite3.
+DATABASE_HOST = '192.168.1.3'             # Set to empty string for localhost. Not used with sqlite3.
 DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
 
 # Local time zone for this installation. Choices can be found here:
@@ -33,7 +33,7 @@ SITE_ID = 1
 # to load the internationalization machinery.
 USE_I18N = True
 
-APP_DIR = '/home/per/Documents/Development/gypsum'
+APP_DIR = '/home/per/Documents/workspace/gypsum'
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
@@ -66,6 +66,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.media", 
     "django.core.context_processors.request", 
     'django.core.context_processors.request',
+    'gypsum.context_processors.setting_tags',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -100,3 +101,4 @@ INSTALLED_APPS = (
     'avatar',
 )
 
+STATIC_URL = '/static'

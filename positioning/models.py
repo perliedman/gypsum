@@ -81,6 +81,9 @@ class Track(models.Model):
             (self.activity.format_speed(self.distance, self.time), 
              self.activity.get_speed_format_display())
     
+    def get_duration_string(self):
+        return str(datetime.timedelta(seconds = self.time))
+    
     def __hash__(self):
         return Track._hash(self, self.positions())
 

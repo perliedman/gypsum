@@ -2,7 +2,7 @@
 <html>
     <head>
         <title>Gypsum</title>
-        <link rel="stylesheet" type="text/css" href="style/base.css"/>
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/style.css"/>
         <!--<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/base/jquery-ui.css"/>
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.min.js"></script>-->
@@ -12,10 +12,19 @@
         <h1>Gypsum</h1>
         <div>
             <h2>Latest</h2>
-            <ul>
+            <ul class="trackList">
             {% for track in tracks %}
                 <li>
-                    {{ track.date }}: <a href="{{ track.owner.username }}/timeline">{% avatar track.owner 32 %} {{ track.owner.get_full_name }}</a>, {{ track.activity }}, {{ track.distance|floatformat:1 }} km
+                	<div class="sideAvatar">
+                		<a href="{{ track.owner.username }}/timeline">{% avatar track.owner 32 %}</a>
+                	</div>
+                    <p>
+                    	<time datetime={{ track.date }}">{{ track.date|timesince }} ago</time> by
+                    	<a href="{{ track.owner.username }}/timeline">{{ track.owner.get_full_name }}</a>
+                	</p>
+                    <p>
+                    	{{ track.activity }}, {{ track.distance|floatformat:1 }} km, {{ track.get_duration_string }} ({{ track.get_pace_string }})
+                   	</p>
                 </li>
             {% endfor %}
             </ul>

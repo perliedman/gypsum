@@ -2,6 +2,7 @@
     <head>
         <title>{{ user.get_full_name }}'s timeline - Gypsum</title>
         <link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/base/jquery-ui.css"/>
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/style.css"/>
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.min.js"></script>
         <script type="text/javascript">
@@ -26,9 +27,9 @@
                 <ul>
                 {% for activity,record in month.activities.items %}
                     <li>{{ activity.name }}
-                        <ul>
+                        <ul class="trackList">
                             {% for track in record.tracks %}
-                                <li><a href="{{ track.url }}">{{ track.date }}</a> - {{ track.distance|floatformat:1}} km</li>
+                                <li><a href="{{ track.url }}">{{ track.date }}</a> - {{ track.distance|floatformat:1}} km, {{ track.get_duration_string }} ({{ track.get_pace_string }})</li>
                             {% endfor %}
                         </ul>
                     </li>

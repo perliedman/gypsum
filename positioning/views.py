@@ -16,6 +16,7 @@ from gypsum.positioning.gpxparser import GPXParser
 from geopy import distance
 
 import datetime
+from django.template.context import RequestContext
 
 def begin_track(request):
     username = request.REQUEST['user']
@@ -59,7 +60,8 @@ def display_track(request, username, year, month, day, number):
         
     track = get_track_by_date(user, int(year), int(month), int(day), int(number))
     if track != None:
-        return render_to_response('display_track.html', {'track': track})
+        return render_to_response('display_track.html', {'track': track},
+                                  context_instance=RequestContext(request))
     else:
         return HttpResponse(status = 404)
 
@@ -132,7 +134,7 @@ def get_track_data(request, username, year, month, day, number):
                 'date': date,
                 'start_time': start_time,
                 'end_time': end_time,
-                'duration': str(datetime.timedelta(seconds = track.time)),
+                'duration': track.get_duration_string(),
                 'pace': track.get_pace_string(),
                 'created_time': track.created_time.strftime('%Y-%m-%d %H:%M:%S'),
                 'elevation_chart_url': track.get_elevation_chart_url(300, 145),
@@ -146,8 +148,9 @@ def get_track_data(request, username, year, month, day, number):
 
 def start_page(request):
     users = User.objects.order_by('first_name', 'last_name')
-    last_tracks = Track.objects.order_by('date').reverse()[:10]
-    return render_to_response('start_page.html', {'users': users, 'tracks': last_tracks})
+    last_tracks = Track.objects.order_by('date').reverse()[:5]
+    return render_to_response('start_page.html', {'users': users, 'tracks': last_tracks},
+                              context_instance=RequestContext(request))
 
 def user_timeline(request, username):
     user = User.objects.get(username__exact = username)
@@ -183,7 +186,8 @@ def user_timeline(request, username):
             activity_record['distance'] = activity_record['distance'] + track.distance
             activity_record['tracks'].append(track)
     
-    return render_to_response('user_timeline.html', {'user': user, 'months': months})    
+    return render_to_response('user_timeline.html', {'user': user, 'months': months},
+                              context_instance=RequestContext(request))    
 
 class UploadTrackForm(forms.Form):
     track_data = forms.FileField(label = 'File to upload', 
@@ -288,7 +292,7 @@ def upload_tracks(request):
     else:
         form = UploadTrackForm()
         
-    return render_to_response('upload_track.html', {'form': form})
+    return render_to_response('upload_track.html', {'form': form}, context_instance=RequestContext(request))
 
 def get_tracks_by_date(owner, year, month, day):
     d = datetime.datetime(year, month, day)
