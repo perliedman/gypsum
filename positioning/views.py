@@ -314,4 +314,5 @@ def get_tracks_by_date(owner, year, month, day):
     return Track.objects.filter(owner = owner, date = d).order_by('created_time')
 
 def get_track_by_date(owner, year, month, day, number):
+    d = datetime.datetime(year, month, day)
     return Track.objects.get(owner=owner, date=d, number=number)
