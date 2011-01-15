@@ -31,7 +31,8 @@ class Activity(models.Model):
 class Track(models.Model):
     name = models.CharField(max_length = 64, null = True, blank = True)
     activity = models.ForeignKey(Activity, null = True)
-    date = models.DateField()
+    date = models.DateField(db_index=True)
+    number = models.IntegerField(db_index=True)
     created_time = models.DateTimeField()
     owner = models.ForeignKey(User)
     is_open = models.BooleanField()
@@ -47,6 +48,15 @@ class Track(models.Model):
             (self.owner.get_full_name(), str(self.activity), 
              self.date.strftime('%Y-%m-%d'), self.distance,
              str(datetime.timedelta(seconds = self.time)))
+    
+    @models.permalink
+    def get_absolute_url(self):
+        return ('gypsum.positioning.views.display_track', (), 
+                {'username': self.owner.username,
+                 'year': self.date.year,
+                 'month': '%02d' % self.date.month,
+                 'day': '%02d' % self.date.day,
+                 'number': self.number})
     
     def save(self, *args, **kwargs):
         super(Track, self).save(*args, **kwargs)

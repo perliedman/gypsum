@@ -19,14 +19,14 @@
             <h3>
                 <a href="#">{{ month.year }}-{{ month.month }} - 
                 {% for activity,record in month.activities.items %}
-                    <em>{{ activity.name }}: {{ record.distance|floatformat:0 }} km</em>
+                    <em><img src="{{ activity.icon_url }}" alt="{{ activity.name }}" title="{{ activity.name }}"/> {{ record.distance|floatformat:0 }} km</em>
                 {% endfor %}
                 </a>
             </h3>
             <div>
                 <ul>
                 {% for activity,record in month.activities.items %}
-                    <li>{{ activity.name }}
+                    <li><img src="{{ activity.icon_url }}" alt="{{ activity.name }}" title="{{ activity.name }}"/>
                         <ul class="trackList">
                             {% for track in record.tracks %}
                                 <li><a href="{{ track.url }}">{{ track.date }}</a> - {{ track.distance|floatformat:1}} km, {{ track.get_duration_string }} ({{ track.get_pace_string }})</li>

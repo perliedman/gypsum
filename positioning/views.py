@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.core import serializers
+from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response
 from django import forms
@@ -148,8 +149,20 @@ def get_track_data(request, username, year, month, day, number):
 
 def start_page(request):
     users = User.objects.order_by('first_name', 'last_name')
-    last_tracks = Track.objects.order_by('date').reverse()[:5]
-    return render_to_response('start_page.html', {'users': users, 'tracks': last_tracks},
+    all_tracks = Track.objects.order_by('date').reverse()
+    paginator = Paginator(all_tracks, 5)
+    
+    try:
+        page = int(request.GET.get('page', 1))
+    except ValueError:
+        page = 1
+    
+    try:
+        tracks = paginator.page(page)
+    except (EmptyPage, InvalidPage):
+        tracks = paginator.page(paginator.num_pages)
+    
+    return render_to_response('start_page.html', {'users': users, 'tracks': tracks},
                               context_instance=RequestContext(request))
 
 def user_timeline(request, username):
@@ -245,6 +258,8 @@ def save_track_file(file, user, only_after):
         # The track's hash isn't calculated automatically, so hash it explicitly
         t.hash = Track._hash(t, positions)
         if (only_after == None or t.date > only_after) and len(Track.objects.filter(owner = user, hash = t.hash)) == 0:
+            days_tracks = get_tracks_by_date(user, track.date.year, track.date.month, track.date.day)
+            t.number = len(days_tracks)
             t.save()
             d = 0.0
             last_pos = None
@@ -299,9 +314,4 @@ def get_tracks_by_date(owner, year, month, day):
     return Track.objects.filter(owner = owner, date = d).order_by('created_time')
 
 def get_track_by_date(owner, year, month, day, number):
-    tracks = get_tracks_by_date(owner, year, month, day)
-    if len(tracks) > number:
-        return tracks[number]
-    else:
-        return None
-
+    return Track.objects.get(owner=owner, date=d, number=number)

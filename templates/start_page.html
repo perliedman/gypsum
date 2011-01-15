@@ -9,11 +9,12 @@
     </head>
     
     <body>
-        <h1>Gypsum</h1>
-        <div>
-            <h2>Latest</h2>
+    	<header>
+        	<h1>Gypsum</h1>
+		</header>
+        <div class="listHolder">
             <ul class="trackList">
-            {% for track in tracks %}
+            {% for track in tracks.object_list %}
                 <li>
                 	<div class="sideAvatar">
                 		<a href="{{ track.owner.username }}/timeline">{% avatar track.owner 32 %}</a>
@@ -23,11 +24,26 @@
                     	<a href="{{ track.owner.username }}/timeline">{{ track.owner.get_full_name }}</a>
                 	</p>
                     <p>
-                    	{{ track.activity }}, {{ track.distance|floatformat:1 }} km, {{ track.get_duration_string }} ({{ track.get_pace_string }})
+                    	<a href="{{ track.get_absolute_url }}"><img src="{{ track.activity.icon_url }}" alt="{{ track.activity }}"/> {{ track.distance|floatformat:1 }} km</a>, {{ track.get_duration_string }} ({{ track.get_pace_string }})
                    	</p>
                 </li>
             {% endfor %}
             </ul>
+			<div class="pagination">
+			    <span class="step-links">
+			        {% if tracks.has_previous %}
+			            <a href="?page={{ tracks.previous_page_number }}">&lt; Previous</a>
+			        {% endif %}
+			
+			        <span class="current">
+			            Page {{ tracks.number }} of {{ tracks.paginator.num_pages }}.
+			        </span>
+			
+			        {% if tracks.has_next %}
+			            <a href="?page={{ tracks.next_page_number }}">Next &gt;</a>
+			        {% endif %}
+			    </span>
+			</div>
         </div>
     </body>
 </html>

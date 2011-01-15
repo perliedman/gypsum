@@ -2,7 +2,24 @@ body {
 	font-family: sans-serif;
 	font-size: 16px;
 	color: #333;
+	margin-top: 32px;
+	margin-left: 32px;
 }
+
+header {
+	display: block;
+	border-bottom: 1px dotted #ccc;
+}
+
+header>h1 {
+	text-transform: capitalize;
+	margin-bottom: 8px;
+}
+
+.trackList {
+	margin-left: 0px;
+	padding-left: 0px;
+}		
 
 .trackList li {
 	border: 1px solid #ddd;
@@ -26,4 +43,14 @@ time {
 	color: #888;
 	font-size: 12px;
 	font-style: italic;
+}
+
+.listHolder {
+	width: 480px;
+}
+
+div.pagination {
+	text-align: center;
+	color: #888;
+	font-size: 12px;
 }
