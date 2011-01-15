@@ -1,49 +1,44 @@
+{% extends "base.html" %}
 {% load avatar_tags %}
-<html>
-    <head>
-        <title>Gypsum</title>
-        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/style.css"/>
-        <!--<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/base/jquery-ui.css"/>
-        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
-        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.min.js"></script>-->
-    </head>
-    
-    <body>
-    	<header>
-        	<h1>Gypsum</h1>
-		</header>
-        <div class="listHolder">
-            <ul class="trackList">
-            {% for track in tracks.object_list %}
-                <li>
-                	<div class="sideAvatar">
-                		<a href="{{ track.owner.username }}/timeline">{% avatar track.owner 32 %}</a>
-                	</div>
-                    <p>
-                    	<time datetime={{ track.date }}">{{ track.date|timesince }} ago</time> by
-                    	<a href="{{ track.owner.username }}/timeline">{{ track.owner.get_full_name }}</a>
-                	</p>
-                    <p>
-                    	<a href="{{ track.get_absolute_url }}"><img src="{{ track.activity.icon_url }}" alt="{{ track.activity }}"/> {{ track.distance|floatformat:1 }} km</a>, {{ track.get_duration_string }} ({{ track.get_pace_string }})
-                   	</p>
-                </li>
-            {% endfor %}
-            </ul>
-			<div class="pagination">
-			    <span class="step-links">
-			        {% if tracks.has_previous %}
-			            <a href="?page={{ tracks.previous_page_number }}">&lt; Previous</a>
-			        {% endif %}
-			
-			        <span class="current">
-			            Page {{ tracks.number }} of {{ tracks.paginator.num_pages }}.
-			        </span>
-			
-			        {% if tracks.has_next %}
-			            <a href="?page={{ tracks.next_page_number }}">Next &gt;</a>
-			        {% endif %}
-			    </span>
-			</div>
-        </div>
-    </body>
-</html>
+{% block content %}
+	<div id="options">
+		<ul>
+			<li>
+				<a href="{% url gypsum.positioning.views.upload_tracks %}">Upload tracks</a>
+			</li>
+		</ul>
+	</div>
+       <div class="listHolder">
+           <ul class="trackList">
+           {% for track in tracks.object_list %}
+               <li>
+               	<div class="sideAvatar">
+               		<a href="{{ track.owner.username }}/timeline">{% avatar track.owner 32 %}</a>
+               	</div>
+                   <p>
+                   	<time datetime={{ track.date }}">{{ track.date|timesince }} ago</time> by
+                   	<a href="{{ track.owner.username }}/timeline">{{ track.owner.get_full_name }}</a>
+               	</p>
+                   <p>
+                   	<a href="{{ track.get_absolute_url }}"><img src="{{ track.activity.icon_url }}" alt="{{ track.activity }}"/> {{ track.distance|floatformat:1 }} km</a>, {{ track.get_duration_string }} ({{ track.get_pace_string }})
+                  	</p>
+               </li>
+           {% endfor %}
+           </ul>
+		<div class="pagination">
+		    <span class="step-links">
+		        {% if tracks.has_previous %}
+		            <a href="?page={{ tracks.previous_page_number }}">&lt; Previous</a>
+		        {% endif %}
+		
+		        <span class="current">
+		            Page {{ tracks.number }} of {{ tracks.paginator.num_pages }}.
+		        </span>
+		
+		        {% if tracks.has_next %}
+		            <a href="?page={{ tracks.next_page_number }}">Next &gt;</a>
+		        {% endif %}
+		    </span>
+		</div>
+       </div>
+{% endblock %}

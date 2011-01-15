@@ -16,6 +16,16 @@ header>h1 {
 	margin-bottom: 8px;
 }
 
+#options {
+	margin-top: 16px;
+	float: right;
+	width: 240px;
+	border: 1px solid #ddd;
+	background: #f4f4f4;
+	margin-bottom: 4px;
+	border-radius: 4px;
+}
+
 .trackList {
 	margin-left: 0px;
 	padding-left: 0px;
