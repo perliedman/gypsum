@@ -64,3 +64,22 @@ div.pagination {
 	color: #888;
 	font-size: 12px;
 }
+
+.weather {
+	width: 32px;
+	height: 28px;
+	float: right;
+	/*border: 1px solid #ddd;*/
+	background: #ddd;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+	border-radius: 3px;
+	padding: 12px 4px 4px 4px;
+	text-align: center;
+	font-size: 16px;
+	font-weight: bold;
+}
+
+.temperature {
+	opacity: 0.8;
+}

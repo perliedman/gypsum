@@ -17,8 +17,26 @@ from gypsum.positioning.gpxparser import GPXParser
 
 from geopy import distance
 
-import datetime
+import datetime, re
 from django.template.context import RequestContext
+
+WEATHER_IMAGE_MAP =  {re.compile(r'^Clear$'): 'sun.png',
+                      re.compile(r'^Partly Cloudy$'): 'partly_cloudy.png',
+                      re.compile(r'^Scattered Clouds$'): 'partly_cloudy.png',
+                      re.compile(r'^Mostly Cloudy$'): 'cloudy.png',
+                      re.compile(r'^Overcast$'): 'cloudy.png',
+                      re.compile(r'^(Light |Heavy |)Rain.*$'): 'rain.png',
+                      re.compile(r'^(Light |Heavy |)Snow.*$'): 'snow.png',
+                      re.compile(r'^(Light |Heavy |)Thunderstorm.*$'): 'thunderstorm.png',
+                      }
+
+def get_weather_image(conditions):
+    if conditions != None:
+        for regexp in WEATHER_IMAGE_MAP.keys():
+            if regexp.match(conditions) != None:
+                return WEATHER_IMAGE_MAP[regexp]
+        
+    return None
 
 def begin_track(request):
     username = request.REQUEST['user']
@@ -62,7 +80,9 @@ def display_track(request, username, year, month, day, number):
         
     track = get_track_by_date(user, int(year), int(month), int(day), int(number))
     if track != None:
-        return render_to_response('display_track.html', {'track': track},
+        return render_to_response('display_track.html', 
+                                  {'track': track,
+                                   'weather_image': get_weather_image(track.weather_conditions)},
                                   context_instance=RequestContext(request))
     else:
         return HttpResponse(status = 404)
@@ -162,6 +182,9 @@ def start_page(request):
         tracks = paginator.page(page)
     except (EmptyPage, InvalidPage):
         tracks = paginator.page(paginator.num_pages)
+
+    for t in tracks.object_list:
+        t.weather_image = get_weather_image(t.weather_conditions)
     
     return render_to_response('start_page.html', {'users': users, 'tracks': tracks},
                               context_instance=RequestContext(request))
@@ -174,13 +197,13 @@ def user_timeline(request, username):
     last_date = None
     day_track_count = 0
     for track in tracks:
+        track.weather_image = get_weather_image(track.weather_conditions)
+        
         if track.date == last_date:
             day_track_count = day_track_count + 1
         else:
             day_track_count = 0
             last_date = track.date
-
-        track.url = '%s/%d/' % (track.date.strftime('%Y/%m/%d'), day_track_count)
     
         if current_month == None or current_month['year'] != track.date.year or current_month['month'] != track.date.month:
             activities = {track.activity: {'distance': track.distance,
