@@ -38,7 +38,7 @@ class Track(models.Model):
     is_open = models.BooleanField()
     distance = models.FloatField()
     time = models.IntegerField()
-    has_weather = models.BooleanField(null=True, default=None, db_index=True)
+    has_weather = models.NullBooleanField(null=True, default=None, db_index=True)
     temperature = models.FloatField(null = True, blank = True)
     precipitation = models.CharField(null = True, max_length = 32, blank = True)
     weather_conditions = models.CharField(null = True, max_length = 32, blank = True)
