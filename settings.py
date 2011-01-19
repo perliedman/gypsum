@@ -1,5 +1,8 @@
 # Django settings for gypsum project.
 
+import djcelery
+djcelery.setup_loader()
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -99,6 +102,16 @@ INSTALLED_APPS = (
     'gypsum.positioning',
     'socialregistration',
     'avatar',
+    "djcelery",
 )
 
+BROKER_HOST = "192.168.1.3"
+BROKER_PORT = 5672
+BROKER_USER = "gypsum"
+BROKER_PASSWORD = "sqwarQZub"
+BROKER_VHOST = "gypsum"
+
+CELERY_RESULT_BACKEND = "amqp"
+
+LOGIN_URL = '/accounts/login/'
 STATIC_URL = '/static'

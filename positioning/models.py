@@ -38,6 +38,7 @@ class Track(models.Model):
     is_open = models.BooleanField()
     distance = models.FloatField()
     time = models.IntegerField()
+    has_weather = models.BooleanField(null=True, default=None, db_index=True)
     temperature = models.FloatField(null = True, blank = True)
     precipitation = models.CharField(null = True, max_length = 32, blank = True)
     weather_conditions = models.CharField(null = True, max_length = 32, blank = True)
@@ -67,11 +68,15 @@ class Track(models.Model):
         return self._positions
         
     def center_coordinate(self):
+        bbox = self.get_bounding_box()
+        return ((bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2)
+        
+    def get_bounding_box(self):
         positions = self.positions()
         if len(positions) == 0:
             raise Exception("Center coordinate can't be calculated for track without positions.")
     
-        limits = (90, 180 -90, 180)
+        limits = [90, 180, -90, -180]
         for p in positions:
             limits[0] = min(limits[0], p.latitude)
             limits[1] = min(limits[1], p.longitude)

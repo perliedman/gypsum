@@ -9,6 +9,7 @@ from django.shortcuts import render_to_response
 from django import forms
 import jsonencoder
 import simplejson as json
+from tasks import get_track_weather
 from zipfile import ZipFile, BadZipfile
 
 from gypsum.positioning.models import Position, Track, Activity
@@ -302,6 +303,7 @@ def upload_tracks(request):
                 (tracks, total_read_tracks) = save_track_file(uploaded_file, request.user, only_after)
                       
             if len(tracks) > 0:
+                get_track_weather.delay()
                 return HttpResponseRedirect(reverse(user_timeline, 
                                             kwargs = {'username': tracks[len(tracks) - 1].owner.username}))
     else:

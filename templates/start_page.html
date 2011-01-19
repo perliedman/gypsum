@@ -19,9 +19,14 @@
                    	<time datetime={{ track.date }}">{{ track.date|timesince }} ago</time> by
                    	<a href="{{ track.owner.username }}/timeline">{{ track.owner.get_full_name }}</a>
                	</p>
-                   <p>
-                   	<a href="{{ track.get_absolute_url }}"><img src="{{ track.activity.icon_url }}" alt="{{ track.activity }}"/> {{ track.distance|floatformat:1 }} km</a>, {{ track.get_duration_string }} ({{ track.get_pace_string }})
-                  	</p>
+                <p>
+                	<a href="{{ track.get_absolute_url }}"><img src="{{ track.activity.icon_url }}" alt="{{ track.activity }}"/> {{ track.distance|floatformat:1 }} km</a>, {{ track.get_duration_string }} ({{ track.get_pace_string }})
+                </p>
+                <p>
+        	        {% if track.has_weather %}
+                	{{ track.weather_conditions }}{% if track.temperature %}, {{ track.temperature }}&deg;C{% endif %}
+                	{% endif %}
+                </p>
                </li>
            {% endfor %}
            </ul>
