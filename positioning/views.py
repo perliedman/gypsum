@@ -19,6 +19,7 @@ from geopy import distance
 
 import datetime, re
 from django.template.context import RequestContext
+from StringIO import StringIO
 
 WEATHER_IMAGE_MAP =  {re.compile(r'^Clear$'): 'sun.png',
                       re.compile(r'^Partly Cloudy$'): 'partly_cloudy.png',
@@ -282,7 +283,7 @@ def save_track_file(file, user, only_after):
         # The track's hash isn't calculated automatically, so hash it explicitly
         t.hash = Track._hash(t, positions)
         if (only_after == None or t.date > only_after) and len(Track.objects.filter(owner = user, hash = t.hash)) == 0:
-            days_tracks = get_tracks_by_date(user, track.date.year, track.date.month, track.date.day)
+            days_tracks = get_tracks_by_date(user, t.date.year, t.date.month, t.date.day)
             t.number = len(days_tracks)
             t.save()
             d = 0.0
@@ -295,44 +296,65 @@ def save_track_file(file, user, only_after):
 
     return (tracks, len(tracks_positions))
 
+def upload_tracks_ws(request):
+    username = request.REQUEST['username']
+    password = request.REQUEST['password']
+    
+    user = authenticate(username = username, password = password)
+    if user is not None and user.is_active:
+        only_newer = bool(request.REQUEST['only_newer'])
+        stream = StringIO(request.REQUEST['data'])
+        try:
+            (tracks, total_read_tracks) = upload_tracks_from_stream(user, stream, only_newer)
+            return HttpResponse(jsonencoder.dumps({'number_found_tracks': total_read_tracks,
+                                                   'number_saved_tracks': len(tracks)}), 
+                                                   mimetype='application/javascript')
+        finally:
+            stream.close()
+    else:
+        return HttpResponse(status=403)
+
 @login_required
 def upload_tracks(request):
     if request.method == 'POST':
         form = UploadTrackForm(request.POST, request.FILES)
         if form.is_valid():
-            tracks = None
-            uploaded_file = form.cleaned_data['track_data']
-
-            only_after = None            
-            if form.cleaned_data['only_newer']:
-                tracks = Track.objects.filter(owner = request.user).order_by('date').reverse()
-                if len(tracks) > 0:
-                    only_after = tracks[0].date
-            
-            total_read_tracks = 0
-            try:
-                zip = ZipFile(uploaded_file)
-                tracks = []
-                for name in zip.namelist():
-                    f = zip.open(name)
-                    try:
-                        (saved_tracks, number_read_tracks) = save_track_file(f, request.user, only_after)
-                        tracks.extend(saved_tracks)
-                        total_read_tracks = total_read_tracks + number_read_tracks
-                    finally:
-                        f.close()
-            except BadZipfile:
-                uploaded_file.seek(0)
-                (tracks, total_read_tracks) = save_track_file(uploaded_file, request.user, only_after)
-                      
+            (tracks, total_read_tracks) = upload_tracks_from_stream(request.user, form.cleaned_data['track_data'], form.cleaned_data['only_newer'])            
             if len(tracks) > 0:
-                get_track_weather.delay()
                 return HttpResponseRedirect(reverse(user_timeline, 
-                                            kwargs = {'username': tracks[len(tracks) - 1].owner.username}))
+                                            kwargs = {'username': request.user}))
     else:
         form = UploadTrackForm()
         
     return render_to_response('upload_track.html', {'form': form}, context_instance=RequestContext(request))
+
+def upload_tracks_from_stream(user, uploaded_file, only_newer):
+    only_after = None            
+    if only_newer:
+        tracks = Track.objects.filter(owner=user).order_by('date').reverse()
+        if len(tracks) > 0:
+            only_after = tracks[0].date
+    
+    total_read_tracks = 0
+    try:
+        zip = ZipFile(uploaded_file)
+        tracks = []
+        for name in zip.namelist():
+            f = zip.open(name)
+            try:
+                (saved_tracks, number_read_tracks) = save_track_file(f, user, only_after)
+                tracks.extend(saved_tracks)
+                total_read_tracks = total_read_tracks + number_read_tracks
+            finally:
+                f.close()
+    except BadZipfile:
+        uploaded_file.seek(0)
+        (tracks, total_read_tracks) = save_track_file(uploaded_file, user, only_after)
+              
+    if len(tracks) > 0:
+        get_track_weather.delay()
+        
+    return (tracks, total_read_tracks)
 
 def get_tracks_by_date(owner, year, month, day):
     d = datetime.datetime(year, month, day)
