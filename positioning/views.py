@@ -230,7 +230,7 @@ def user_timeline(request, username):
 class UploadTrackForm(forms.Form):
     track_data = forms.FileField(label = 'File to upload', 
         help_text = 'The file to upload. The file must be a GPX file, or a ZIP file containing GPX files.')
-    only_newer = forms.BooleanField(label = 'Store only newer', initial = True)
+    only_newer = forms.BooleanField(label = 'Store only newer', initial = True, required=False)
 
 def parse_gpx_tracks(user, gpx_file):
     gpx = GPXParser(gpx_file)
