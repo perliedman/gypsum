@@ -1,8 +1,5 @@
-  function updateTrackData() {
-    $.getJSON('positions', function(data) { displayTrackData(data); });
-  };
-  
-  function displayTrackData(data) {
+define(['jquery'], function($) {
+    function displayTrackData(data, map) {
     if (data['name'] != null && data['name'].length > 0) {
         $("#trackName").text(data['name']);
         $("#trackNameRow").show();
@@ -17,7 +14,7 @@
     $("#trackCreationTime").text(data['created_time']);
     $("#paceChart").attr("src", data['pace_chart_url']);
     $("#elevationChart").attr("src", data['elevation_chart_url']);
-                      
+
     var positions = data['positions'];
     points = [];
     var bounds = new google.maps.LatLngBounds();
@@ -26,24 +23,24 @@
         bounds.extend(latlng);
         points.push(latlng);
     });
-    
+
     trackLine = new google.maps.Polyline({
         path: [],
         strokeColor: '#ff0000',
         strokeOpacity: 0.6,
         strokeWeight: 6
     });
-    
+
     trackLine.setMap(map);
     map.fitBounds(bounds);
-    
+
     infoPoints = data.info_points;
     isTrackOpen = data.is_open;
-    
-    setTimeout(appendPath, 0);
+
+    setTimeout(function() { appendPath(map); }, 0);
   };
-  
-  function appendPath() {
+
+  function appendPath(map) {
     var path = trackLine.getPath();
     if (path.length < points.length) {
         var infoPoint = infoPoints[path.length];
@@ -56,21 +53,28 @@
             var infoWindow = new google.maps.InfoWindow({
                 content: '<em>' + infoPoint.distance + 'km</em><br/>'
                     + '<em>Total time: ' + infoPoint.total_time + '</em></br/>'
-                    + '<em>Speed: ' + infoPoint.pace + '</em><br/>'                        
+                    + '<em>Speed: ' + infoPoint.pace + '</em><br/>'
             });
             google.maps.event.addListener(marker, 'click', function() {
-				if (currInfoWindow != null) {
-					currInfoWindow.close();
-				}
-                
+                if (currInfoWindow != null) {
+                    currInfoWindow.close();
+                }
+
                 infoWindow.open(map, marker);
                 currInfoWindow = infoWindow;
             });
         }
-        
+
         path.insertAt(path.length, points[path.length]);
         setTimeout(appendPath, 0);
     } else if (isTrackOpen) {
         setTimeout(updateTrackData, 30);
     }
   };
+
+  return {
+    updateTrackData: function(map) {
+      $.getJSON('positions', function(data) { displayTrackData(data, map); });
+    }
+  };
+});

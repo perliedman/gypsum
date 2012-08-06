@@ -1,14 +1,14 @@
 <html>
     <head>
         <title>{{ track.get_title }} - Gypsum</title>
-        
+
         <style type="text/css">
             body {
                 font-family: sans;
                 margin: 0px;
                 padding: 0px;
             }
-            
+
             #info {
                 position: absolute;
                 right: 8px;
@@ -19,46 +19,22 @@
                 opacity: 0.7;
                 z-index: 1;
             }
-            
+
             .infoHeader {
                 font-weight: bold;
             }
-            
+
             #trackInfo {
                 height: 100%;
             }
         </style>
         <link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/base/jquery-ui.css"/>
-        
+
         <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
-        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
-        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.min.js"></script>
+        <script type="text/javascript" data-main="{{ STATIC_URL }}/js/main" src="{{ STATIC_URL }}/js/require.js"></script>
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.21/jquery-ui.min.js"></script>
         <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}/js/track.js"></script>
-        <script type="text/javascript">
-          var map;
-          var trackLine;
-          var points;
-          var infoPoints;
-          var isTrackOpen;
-          var currInfoWindow = null;
-          
-          $(document).ready(function() {
-            var latlng = new google.maps.LatLng(57.8, 11.9);
-            var myOptions = {
-              zoom: 8,
-              center: latlng,
-              mapTypeId: google.maps.MapTypeId.ROADMAP
-            };
-            map = new google.maps.Map(document.getElementById("map"), myOptions);
-          
-            $(function() {
-              $("#trackInfo").tabs();
-            });
-            
-            updateTrackData();
-          });          
-        </script>
     </head>
     <body>
         <div id="info">
