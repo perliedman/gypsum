@@ -15,7 +15,7 @@ MANAGERS = ADMINS
 DATABASE_ENGINE = 'mysql'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
 DATABASE_NAME = 'gypsum'             # Or path to database file if using sqlite3.
 DATABASE_USER = 'gypsum'             # Not used with sqlite3.
-DATABASE_PASSWORD = '5UzWHZ5TB69XsLcB'         # Not used with sqlite3.
+DATABASE_PASSWORD = 'meh'         # Not used with sqlite3.
 DATABASE_HOST = '192.168.1.3'             # Set to empty string for localhost. Not used with sqlite3.
 DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
 
@@ -24,7 +24,7 @@ DATABASE_PORT = ''             # Set to empty string for default. Not used with 
 # although not all choices may be available on all operating systems.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'Stockholm/Sweden'
+TIME_ZONE = 'Europe/Stockholm'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -63,11 +63,11 @@ TEMPLATE_LOADERS = (
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
-    "django.core.context_processors.auth", 
-    "django.core.context_processors.debug", 
-    "django.core.context_processors.i18n", 
-    "django.core.context_processors.media", 
-    "django.core.context_processors.request", 
+    "django.core.context_processors.auth",
+    "django.core.context_processors.debug",
+    "django.core.context_processors.i18n",
+    "django.core.context_processors.media",
+    "django.core.context_processors.request",
     'django.core.context_processors.request',
     'gypsum.context_processors.setting_tags',
 )
@@ -100,9 +100,8 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'gypsum.positioning',
-    'socialregistration',
     'avatar',
-    "djcelery",
+    'djcelery',
 )
 
 BROKER_HOST = "192.168.1.3"
