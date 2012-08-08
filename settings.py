@@ -3,6 +3,29 @@
 import djcelery
 djcelery.setup_loader()
 
+secretSetup = {}
+try:
+    execfile('secrets.py', {}, secretSetup)
+except IOError:
+    pass
+
+if 'databases' in secretSetup:
+    DATABASES = secretSetup['databases']
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': 'gypsum.db3'
+        }
+    }
+
+if 'celery_broker' in secretSetup:
+    BROKER_HOST = secretSetup['celery_broker']['HOST']
+    BROKER_PORT = secretSetup['celery_broker']['PORT']
+    BROKER_USER = secretSetup['celery_broker']['USER']
+    BROKER_PASSWORD = secretSetup['celery_broker']['PASSWORD']
+    BROKER_VHOST = secretSetup['celery_broker']['VHOST']
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -11,13 +34,6 @@ ADMINS = (
 )
 
 MANAGERS = ADMINS
-
-DATABASE_ENGINE = 'mysql'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-DATABASE_NAME = 'gypsum'             # Or path to database file if using sqlite3.
-DATABASE_USER = 'gypsum'             # Not used with sqlite3.
-DATABASE_PASSWORD = 'meh'         # Not used with sqlite3.
-DATABASE_HOST = '192.168.1.3'             # Set to empty string for localhost. Not used with sqlite3.
-DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -103,12 +119,6 @@ INSTALLED_APPS = (
     'avatar',
     'djcelery',
 )
-
-BROKER_HOST = "192.168.1.3"
-BROKER_PORT = 5672
-BROKER_USER = "gypsum"
-BROKER_PASSWORD = "sqwarQZub"
-BROKER_VHOST = "gypsum"
 
 CELERY_RESULT_BACKEND = "amqp"
 
