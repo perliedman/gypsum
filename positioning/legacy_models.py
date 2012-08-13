@@ -1,12 +1,12 @@
+"""Models used by deprecated relational database."""
+
 import datetime
 from django.conf import settings
 from django.db import models
-from djangotoolbox.fields import ListField
 from django.contrib.auth.models import User
 from pygooglechart import SimpleLineChart, Axis
 from geopy import distance
 from filter import ema
-from djangotoolbox.fields import EmbeddedModelField
 
 class Activity(models.Model):
     name = models.CharField(max_length = 32)
@@ -29,23 +29,23 @@ class Activity(models.Model):
         except ZeroDivisionError:
             return '-'
 
-class Weather(models.Model):
-    temperature = models.FloatField(null = True, blank = True)
-    precipitation = models.CharField(null = True, max_length = 32, blank = True)
-    conditions = models.CharField(null = True, max_length = 32, blank = True)
+class LegacyTrack(models.Model):
+    class Meta:
+        db_table = 'positioning_track'
 
-class Track(models.Model):
     name = models.CharField(max_length = 64, null = True, blank = True)
     activity = models.ForeignKey(Activity, null = True)
     date = models.DateField(db_index=True)
     number = models.IntegerField(db_index=True)
     created_time = models.DateTimeField()
     owner = models.ForeignKey(User)
+    is_open = models.BooleanField()
     distance = models.FloatField()
     time = models.IntegerField()
-    weather = EmbeddedModelField('Weather', null=True, default=None, db_index=True)
-    gpx = models.TextField(null = False, default = '')
-    geojson = models.TextField(null = False, default = '')
+    has_weather = models.NullBooleanField(null=True, default=None, db_index=True)
+    temperature = models.FloatField(null = True, blank = True)
+    precipitation = models.CharField(null = True, max_length = 32, blank = True)
+    weather_conditions = models.CharField(null = True, max_length = 32, blank = True)
     hash = models.IntegerField()
 
     def __unicode__(self):
@@ -174,5 +174,5 @@ class Position(models.Model):
     longitude = models.FloatField()
     altitude = models.FloatField()
     time = models.DateTimeField()
-    track = models.ForeignKey(Track)
+    track = models.ForeignKey(LegacyTrack)
 
