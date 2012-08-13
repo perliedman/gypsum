@@ -1,13 +1,11 @@
 define(function() {
   return {
     create: function(id) {
-      var latlng = new google.maps.LatLng(57.8, 11.9);
-      var myOptions = {
-        zoom: 8,
-        center: latlng,
-        mapTypeId: google.maps.MapTypeId.ROADMAP
-      };
-      var map = new google.maps.Map(document.getElementById(id), myOptions);
+      var url = "http://a.tiles.mapbox.com/v3/liedman.map-5qqfez0n.jsonp";
+      var map = new L.Map(id);
+      wax.tilejson(url, function(tilejson) {
+        map.addLayer(new wax.leaf.connector(tilejson));
+      });
 
       return map;
     }

@@ -17,21 +17,20 @@ define(['jquery'], function($) {
 
     var positions = data['positions'];
     points = [];
-    var bounds = new google.maps.LatLngBounds();
+    var bounds = new L.LatLngBounds();
     $.each(positions, function(index, position) {
-        var latlng = new google.maps.LatLng(position.fields.latitude, position.fields.longitude);
+        var latlng = new L.LatLng(position.fields.latitude, position.fields.longitude);
         bounds.extend(latlng);
         points.push(latlng);
     });
 
-    trackLine = new google.maps.Polyline({
-        path: [],
-        strokeColor: '#ff0000',
-        strokeOpacity: 0.6,
-        strokeWeight: 6
+    trackLine = new L.Polyline([], {
+        color: '#ff0000',
+        opacity: 0.6,
+        weight: 6
     });
 
-    trackLine.setMap(map);
+    map.addLayer(trackLine);
     map.fitBounds(bounds);
 
     infoPoints = data.info_points;
@@ -41,32 +40,21 @@ define(['jquery'], function($) {
   };
 
   function appendPath(map) {
-    var path = trackLine.getPath();
+    var path = trackLine.getLatLngs();
     if (path.length < points.length) {
         var infoPoint = infoPoints[path.length];
         if (infoPoint) {
-            var marker = new google.maps.Marker({
-                position: points[path.length],
-                map: map,
+            var marker = new L.Marker(points[path.length], {
                 title: infoPoint.distance + "km"
             });
-            var infoWindow = new google.maps.InfoWindow({
-                content: '<em>' + infoPoint.distance + 'km</em><br/>'
+            marker.bindPopup('<em>' + infoPoint.distance + 'km</em><br/>'
                     + '<em>Total time: ' + infoPoint.total_time + '</em></br/>'
-                    + '<em>Speed: ' + infoPoint.pace + '</em><br/>'
-            });
-            google.maps.event.addListener(marker, 'click', function() {
-                if (currInfoWindow != null) {
-                    currInfoWindow.close();
-                }
-
-                infoWindow.open(map, marker);
-                currInfoWindow = infoWindow;
-            });
+                    + '<em>Speed: ' + infoPoint.pace + '</em><br/>');
+            map.addLayer(marker);
         }
 
-        path.insertAt(path.length, points[path.length]);
-        setTimeout(appendPath, 0);
+        trackLine.spliceLatLngs(path.length, 0, points[path.length]);
+        setTimeout(function() { appendPath(map); }, 0);
     } else if (isTrackOpen) {
         setTimeout(updateTrackData, 30);
     }
