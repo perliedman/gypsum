@@ -12,7 +12,7 @@ import simplejson as json
 from tasks import get_track_weather
 from zipfile import ZipFile, BadZipfile
 
-from gypsum.positioning.models import Position, Track, Activity
+from gypsum.positioning.models import Track, Activity
 from gypsum.positioning.gpxparser import GPXParser
 
 from geopy import distance
@@ -31,12 +31,12 @@ WEATHER_IMAGE_MAP =  {re.compile(r'^Clear$'): 'sun.png',
                       re.compile(r'^(Light |Heavy |)Thunderstorm.*$'): 'thunderstorm.png',
                       }
 
-def get_weather_image(conditions):
-    if conditions != None:
+def get_weather_image(track):
+    if track.weather != None and track.weather.conditions != None:
         for regexp in WEATHER_IMAGE_MAP.keys():
             if regexp.match(conditions) != None:
                 return WEATHER_IMAGE_MAP[regexp]
-        
+
     return None
 
 def begin_track(request):
@@ -48,11 +48,11 @@ def begin_track(request):
     if user is not None and user.is_active:
         t = Track(name = track_name, owner = user, created_time = datetime.datetime.now(), is_open = True)
         t.save()
-        
+
         return HttpResponse("{'track_id': '%s'}" % (t.id,), status = 200)
     else:
         return HttpResponse(status = 401)
-        
+
 def report(request):
     if request.method == 'POST':
         post_data = request.raw_post_data.decode('utf-8')
@@ -60,30 +60,30 @@ def report(request):
         track = Track.objects.get(id=data['track'])
         if (datetime.datetime.now() - track.created_time).days > 0:
             return HttpResponse('Track is older than one day and closed for reporting.', status = 400)
-        
+
         for pos_doc in data['positions']:
             p = Position(latitude = pos_doc['lat'], \
                          longitude = pos_doc['lat'], \
                          altitude = pos_doc['lat'], \
                          time = datetime.datetime.fromtimestamp(pos_doc['time'] / 1000), \
                          track = track)
-            p.save()	
+            p.save()
 
         return HttpResponse(status = 200)
     else:
         return HttpResponse("Only POST allowed.", status = 400)
-        
+
 def display_track(request, username, year, month, day, number):
     user = User.objects.get(username__exact = username)
     if user == None:
         print 'No user called "%s".' % username
         return HttpResponse(status = 404)
-        
+
     track = get_track_by_date(user, int(year), int(month), int(day), int(number))
     if track != None:
-        return render_to_response('display_track.html', 
+        return render_to_response('display_track.html',
                                   {'track': track,
-                                   'weather_image': get_weather_image(track.weather_conditions)},
+                                   'weather_image': get_weather_image(track)},
                                   context_instance=RequestContext(request))
     else:
         return HttpResponse(status = 404)
@@ -97,11 +97,11 @@ def calculate_marker_spacing(track):
             marker_spacing = marker_spacing * 5
         else:
             marker_spacing = marker_spacing * 2
-            
+
         count = count + 1
-        
-    return marker_spacing 
-        
+
+    return marker_spacing
+
 def create_markers(track):
     marker_spacing = calculate_marker_spacing(track)
 
@@ -112,7 +112,7 @@ def create_markers(track):
     info_points = {}
     positions = track.positions()
     last_info_point = positions[0]
-    
+
     for p in positions:
         if last_pos != None:
             d = d + distance.distance((p.latitude, p.longitude), \
@@ -128,15 +128,15 @@ def create_markers(track):
 
         last_pos = p
         count = count + 1
-        
+
     return info_points
-        
+
 def get_track_data(request, username, year, month, day, number):
     user = User.objects.get(username__exact = username)
     if user == None:
         print 'No user called "%s".' % username
         return HttpResponse(status = 404)
-        
+
     track = get_track_by_date(user, int(year), int(month), int(day), int(number))
     if track != None:
         positions = track.positions()
@@ -151,7 +151,7 @@ def get_track_data(request, username, year, month, day, number):
             start_time = ''
             end_time = ''
             markers = {}
-                        
+
         data = {'name': track.name,
                 'distance': track.distance,
                 'date': date,
@@ -162,7 +162,7 @@ def get_track_data(request, username, year, month, day, number):
                 'created_time': track.created_time.strftime('%Y-%m-%d %H:%M:%S'),
                 'elevation_chart_url': track.get_elevation_chart_url(300, 145),
                 'pace_chart_url': track.get_pace_chart_url(300, 145),
-                'is_open': track.is_open,
+                'is_open': False,
                 'positions': positions,
                 'info_points': markers}
         return HttpResponse(jsonencoder.dumps(data), mimetype='application/javascript')
@@ -173,20 +173,20 @@ def start_page(request):
     users = User.objects.order_by('first_name', 'last_name')
     all_tracks = Track.objects.order_by('date').reverse()
     paginator = Paginator(all_tracks, 5)
-    
+
     try:
         page = int(request.GET.get('page', 1))
     except ValueError:
         page = 1
-    
+
     try:
         tracks = paginator.page(page)
     except (EmptyPage, InvalidPage):
         tracks = paginator.page(paginator.num_pages)
 
     for t in tracks.object_list:
-        t.weather_image = get_weather_image(t.weather_conditions)
-    
+        t.weather_image = get_weather_image(t)
+
     return render_to_response('start_page.html', {'users': users, 'tracks': tracks},
                               context_instance=RequestContext(request))
 
@@ -198,14 +198,14 @@ def user_timeline(request, username):
     last_date = None
     day_track_count = 0
     for track in tracks:
-        track.weather_image = get_weather_image(track.weather_conditions)
-        
+        track.weather_image = get_weather_image(track)
+
         if track.date == last_date:
             day_track_count = day_track_count + 1
         else:
             day_track_count = 0
             last_date = track.date
-    
+
         if current_month == None or current_month['year'] != track.date.year or current_month['month'] != track.date.month:
             activities = {track.activity: {'distance': track.distance,
                                            'tracks': [track]}}
@@ -220,15 +220,15 @@ def user_timeline(request, username):
             else:
                 activity_record = {'distance': 0.0, 'tracks': []}
                 current_month['activities'][track.activity] = activity_record
-        
+
             activity_record['distance'] = activity_record['distance'] + track.distance
             activity_record['tracks'].append(track)
-    
+
     return render_to_response('user_timeline.html', {'user': user, 'months': months},
-                              context_instance=RequestContext(request))    
+                              context_instance=RequestContext(request))
 
 class UploadTrackForm(forms.Form):
-    track_data = forms.FileField(label = 'File to upload', 
+    track_data = forms.FileField(label = 'File to upload',
         help_text = 'The file to upload. The file must be a GPX file, or a ZIP file containing GPX files.')
     only_newer = forms.BooleanField(label = 'Store only newer', initial = True, required=False)
 
@@ -236,7 +236,7 @@ def parse_gpx_tracks(user, gpx_file):
     gpx = GPXParser(gpx_file)
 
     track_models = []
-    
+
     for track_name in gpx.tracks:
         gpx_track = gpx.tracks[track_name]
         if len(gpx_track) > 0:
@@ -244,36 +244,36 @@ def parse_gpx_tracks(user, gpx_file):
                 given_name = track_name
             else:
                 given_name = None
-        
+
             t = gpx_track[0].time
             duration = gpx_track[len(gpx_track) - 1].time - t
 
-            track = Track(name = given_name, 
-                date = datetime.date(t.year, t.month, t.day), 
-                created_time = datetime.datetime.now(), 
-                owner = user, 
+            track = Track(name = given_name,
+                date = datetime.date(t.year, t.month, t.day),
+                created_time = datetime.datetime.now(),
+                owner = user,
                 distance = 0,
                 time = duration.seconds,    # TODO: this will break for tracks longer than a day!
                 is_open = False)
             positions = []
             last_pos = None
-            
+
             for pos in gpx_track:
                 positions.append(pos)
-                
+
                 if last_pos != None:
                     track.distance = track.distance + distance.distance((pos.latitude, pos.longitude), \
                         (last_pos.latitude, last_pos.longitude)).kilometers
-                        
+
                 last_pos = pos
-                
+
             avg_speed_kmh = track.distance / (duration.seconds / 3600.0) # TODO: this will break for tracks longer than a day!
             for activity in Activity.objects.order_by('max_speed').reverse():
                 if avg_speed_kmh <= activity.max_speed:
                     track.activity = activity
-                                    
+
             track_models.append((track, positions))
-            
+
     return track_models
 
 def save_track_file(file, user, only_after):
@@ -291,7 +291,7 @@ def save_track_file(file, user, only_after):
             for p in positions:
                 p.track = t
                 p.save()
-                         
+
             tracks.append(t)
 
     return (tracks, len(tracks_positions))
@@ -299,7 +299,7 @@ def save_track_file(file, user, only_after):
 def upload_tracks_ws(request):
     username = request.REQUEST['username']
     password = request.REQUEST['password']
-    
+
     user = authenticate(username = username, password = password)
     if user is not None and user.is_active:
         only_newer = bool(request.REQUEST['only_newer'])
@@ -307,7 +307,7 @@ def upload_tracks_ws(request):
         try:
             (tracks, total_read_tracks) = upload_tracks_from_stream(user, stream, only_newer)
             return HttpResponse(jsonencoder.dumps({'number_found_tracks': total_read_tracks,
-                                                   'number_saved_tracks': len(tracks)}), 
+                                                   'number_saved_tracks': len(tracks)}),
                                                    mimetype='application/javascript')
         finally:
             stream.close()
@@ -319,22 +319,22 @@ def upload_tracks(request):
     if request.method == 'POST':
         form = UploadTrackForm(request.POST, request.FILES)
         if form.is_valid():
-            (tracks, total_read_tracks) = upload_tracks_from_stream(request.user, form.cleaned_data['track_data'], form.cleaned_data['only_newer'])            
+            (tracks, total_read_tracks) = upload_tracks_from_stream(request.user, form.cleaned_data['track_data'], form.cleaned_data['only_newer'])
             if len(tracks) > 0:
-                return HttpResponseRedirect(reverse(user_timeline, 
+                return HttpResponseRedirect(reverse(user_timeline,
                                             kwargs = {'username': request.user}))
     else:
         form = UploadTrackForm()
-        
+
     return render_to_response('upload_track.html', {'form': form}, context_instance=RequestContext(request))
 
 def upload_tracks_from_stream(user, uploaded_file, only_newer):
-    only_after = None            
+    only_after = None
     if only_newer:
         tracks = Track.objects.filter(owner=user).order_by('date').reverse()
         if len(tracks) > 0:
             only_after = tracks[0].date
-    
+
     total_read_tracks = 0
     try:
         zip = ZipFile(uploaded_file)
@@ -350,10 +350,10 @@ def upload_tracks_from_stream(user, uploaded_file, only_newer):
     except BadZipfile:
         uploaded_file.seek(0)
         (tracks, total_read_tracks) = save_track_file(uploaded_file, user, only_after)
-              
+
     if len(tracks) > 0:
         get_track_weather.delay()
-        
+
     return (tracks, total_read_tracks)
 
 def get_tracks_by_date(owner, year, month, day):

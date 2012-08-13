@@ -7,6 +7,9 @@ from pygooglechart import SimpleLineChart, Axis
 from geopy import distance
 from filter import ema
 from djangotoolbox.fields import EmbeddedModelField
+from gypsum.positioning.gpxparser import GPXParser
+from StringIO import StringIO
+import pymongo
 
 class Activity(models.Model):
     name = models.CharField(max_length = 32)
@@ -35,6 +38,9 @@ class Weather(models.Model):
     conditions = models.CharField(null = True, max_length = 32, blank = True)
 
 class Track(models.Model):
+    class MongoMeta:
+        index_together = ['owner', ('date', pymongo.DESCENDING)]
+
     name = models.CharField(max_length = 64, null = True, blank = True)
     activity = models.ForeignKey(Activity, null = True)
     date = models.DateField(db_index=True)
@@ -68,7 +74,11 @@ class Track(models.Model):
 
     def positions(self):
         if not hasattr(self, '_positions'):
-            self._positions = Position.objects.filter(track = self)
+            gpx = GPXParser(StringIO(self.gpx))
+            self._positions = []
+            for track_name in gpx.tracks:
+                for p in gpx.tracks[track_name]:
+                    self._positions.append(p)
         return self._positions
 
     def center_coordinate(self):
@@ -168,11 +178,3 @@ class Track(models.Model):
         chart.set_axis_range(Axis.LEFT, min_elev, max_elev)
 
         return chart.get_url()
-
-class Position(models.Model):
-    latitude = models.FloatField()
-    longitude = models.FloatField()
-    altitude = models.FloatField()
-    time = models.DateTimeField()
-    track = models.ForeignKey(Track)
-
