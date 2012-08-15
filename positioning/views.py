@@ -5,7 +5,7 @@ from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.core import serializers
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.core.urlresolvers import reverse
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, get_object_or_404
 from django import forms
 import jsonencoder
 import simplejson as json
@@ -39,54 +39,13 @@ def get_weather_image(track):
 
     return None
 
-def begin_track(request):
-    username = request.REQUEST['user']
-    password = request.REQUEST['pw']
-    track_name = request.REQUEST['track']
-
-    user = authenticate(username = username, password = password)
-    if user is not None and user.is_active:
-        t = Track(name = track_name, owner = user, created_time = datetime.datetime.now(), is_open = True)
-        t.save()
-
-        return HttpResponse("{'track_id': '%s'}" % (t.id,), status = 200)
-    else:
-        return HttpResponse(status = 401)
-
-def report(request):
-    if request.method == 'POST':
-        post_data = request.raw_post_data.decode('utf-8')
-        data = json.loads(post_data)
-        track = Track.objects.get(id=data['track'])
-        if (datetime.datetime.now() - track.created_time).days > 0:
-            return HttpResponse('Track is older than one day and closed for reporting.', status = 400)
-
-        for pos_doc in data['positions']:
-            p = Position(latitude = pos_doc['lat'], \
-                         longitude = pos_doc['lat'], \
-                         altitude = pos_doc['lat'], \
-                         time = datetime.datetime.fromtimestamp(pos_doc['time'] / 1000), \
-                         track = track)
-            p.save()
-
-        return HttpResponse(status = 200)
-    else:
-        return HttpResponse("Only POST allowed.", status = 400)
-
 def display_track(request, username, year, month, day, number):
-    user = User.objects.get(username__exact = username)
-    if user == None:
-        print 'No user called "%s".' % username
-        return HttpResponse(status = 404)
-
+    user = get_object_or_404(User, username__exact = username)
     track = get_track_by_date(user, int(year), int(month), int(day), int(number))
-    if track != None:
-        return render_to_response('display_track.html',
-                                  {'track': track,
-                                   'weather_image': get_weather_image(track)},
-                                  context_instance=RequestContext(request))
-    else:
-        return HttpResponse(status = 404)
+    return render_to_response('display_track.html',
+                              {'track': track,
+                               'weather_image': get_weather_image(track)},
+                              context_instance=RequestContext(request))
 
 def calculate_marker_spacing(track):
     marker_spacing = 1
@@ -362,4 +321,4 @@ def get_tracks_by_date(owner, year, month, day):
 
 def get_track_by_date(owner, year, month, day, number):
     d = datetime.datetime(year, month, day)
-    return Track.objects.get(owner=owner, date=d, number=number)
+    return get_object_or_404(Track, owner=owner, date=d, number=number)
