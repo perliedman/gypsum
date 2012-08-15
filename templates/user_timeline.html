@@ -10,12 +10,12 @@
             });
         </script>
 {% endblock %}
-{% block content %}    
+{% block content %}
      <h1>{{ user.get_full_name }}'s timeline</h1>
      <div id="accordion">
      {% for month in months %}
          <h3>
-             <a href="#">{{ month.year }}-{{ month.month }} - 
+             <a href="#">{{ month.year }}-{{ month.month }} -
              {% for activity,record in month.activities.items %}
                  <em><img src="{{ activity.icon_url }}" alt="{{ activity.name }}" title="{{ activity.name }}"/> {{ record.distance|floatformat:0 }} km</em>
              {% endfor %}
@@ -27,7 +27,7 @@
                  <li><img src="{{ activity.icon_url }}" alt="{{ activity.name }}" title="{{ activity.name }}"/>
                      <ul class="trackList">
                          {% for track in record.tracks %}
-                             <li><a href="{{ track.url }}">{{ track.date }}</a> - {{ track.distance|floatformat:1}} km, {{ track.get_duration_string }} ({{ track.get_pace_string }})</li>
+                             <li><a href="{{ track.get_absolute_url }}">{{ track.date }}</a> - {{ track.distance|floatformat:1}} km, {{ track.get_duration_string }} ({{ track.get_pace_string }})</li>
                          {% endfor %}
                      </ul>
                  </li>

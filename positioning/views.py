@@ -154,18 +154,15 @@ def user_timeline(request, username):
     tracks = Track.objects.filter(owner = user).order_by('date').reverse()
     months = []
     current_month = None
-    last_date = None
-    day_track_count = 0
+
     for track in tracks:
         track.weather_image = get_weather_image(track)
 
-        if track.date == last_date:
-            day_track_count = day_track_count + 1
-        else:
-            day_track_count = 0
-            last_date = track.date
+        is_new_month = current_month == None \
+            or current_month['year'] != track.date.year \
+            or current_month['month'] != track.date.month
 
-        if current_month == None or current_month['year'] != track.date.year or current_month['month'] != track.date.month:
+        if is_new_month:
             activities = {track.activity: {'distance': track.distance,
                                            'tracks': [track]}}
 
