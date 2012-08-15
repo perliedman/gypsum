@@ -34,7 +34,7 @@ WEATHER_IMAGE_MAP =  {re.compile(r'^Clear$'): 'sun.png',
 def get_weather_image(track):
     if track.weather != None and track.weather.conditions != None:
         for regexp in WEATHER_IMAGE_MAP.keys():
-            if regexp.match(conditions) != None:
+            if regexp.match(track.weather.conditions) != None:
                 return WEATHER_IMAGE_MAP[regexp]
 
     return None
