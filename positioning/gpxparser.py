@@ -1,18 +1,7 @@
 import sys, string
 from xml.dom import minidom, Node
 import datetime
-from django.db import models
-
-class Position(models.Model):
-    def __init__(self, **kwargs):
-        self.latitude = kwargs['latitude']
-        self.longitude = kwargs['longitude']
-        self.time = kwargs['time']
-
-        if 'altitude' in kwargs:
-            self.altitude = kwargs['altitude']
-        else:
-            self.altitude = None
+from gypsum.positioning.models import Position
 
 class GPXParser:
   def __init__(self, filename):

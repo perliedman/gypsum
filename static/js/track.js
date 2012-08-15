@@ -19,7 +19,7 @@ define(['jquery'], function($) {
     points = [];
     var bounds = new L.LatLngBounds();
     $.each(positions, function(index, position) {
-        var latlng = new L.LatLng(position.fields.latitude, position.fields.longitude);
+        var latlng = new L.LatLng(position.latitude, position.longitude);
         bounds.extend(latlng);
         points.push(latlng);
     });

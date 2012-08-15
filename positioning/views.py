@@ -110,7 +110,7 @@ def create_markers(track):
     last_km_counter = -1
     count = 0
     info_points = {}
-    positions = track.positions()
+    positions = track.positions
     last_info_point = positions[0]
 
     for p in positions:
@@ -139,7 +139,7 @@ def get_track_data(request, username, year, month, day, number):
 
     track = get_track_by_date(user, int(year), int(month), int(day), int(number))
     if track != None:
-        positions = track.positions()
+        positions = track.positions
 
         if len(positions) > 0:
             date = positions[0].time.strftime('%Y-%m-%d')
@@ -165,7 +165,7 @@ def get_track_data(request, username, year, month, day, number):
                 'is_open': False,
                 'positions': positions,
                 'info_points': markers}
-        return HttpResponse(jsonencoder.dumps(data), mimetype='application/javascript')
+        return HttpResponse(jsonencoder.dumps(data), mimetype='application/json')
     else:
         return HttpResponse(status = 404)
 

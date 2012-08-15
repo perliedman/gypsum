@@ -53,6 +53,7 @@ def migrate_tracks():
     i = 0
     for t in legacy_models.LegacyTrack.objects.using('legacy').all():
         positions = legacy_models.Position.objects.using('legacy').filter(track = t).order_by('time')
+        positions_new = [models.Position(latitude=p.latitude, longitude=p.longitude, altitude=p.altitude, time=p.time) for p in positions]
         activity_new = models.Activity.objects.get(name=t.activity.name)
         owner_new = User.objects.using('default').get(username = t.owner.username)
         gpx = create_gpx(t, positions)
@@ -67,6 +68,7 @@ def migrate_tracks():
             distance = t.distance,
             time = t.time,
             gpx = gpx,
+            positions = positions_new,
             hash = gpx.__hash__())
 
         if t.has_weather:
