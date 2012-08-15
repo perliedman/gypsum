@@ -107,18 +107,6 @@ class Track(models.Model):
     def __hash__(self):
         return hash(self.gpx)
 
-    @classmethod
-    def _hash(clss, track, positions):
-        h = hash(track.name) \
-            * 37 + hash(track.date)
-
-        for p in positions[::50]:
-            h = h + 37 * hash(p.latitude) \
-                + 37 * hash(p.longitude) \
-                + 37 * hash(p.time)
-
-        return int(h & (2**31 - 1))
-
     def get_pace_chart_url(self, width, height):
         if len(self.positions) == 0:
             return ''
