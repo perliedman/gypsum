@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load openid_tags %}
 {% block title %}Gypsum - login{% endblock %}
 {% block content %}
     <form method="post">
@@ -7,5 +6,4 @@
         {{ form.as_p }}
         <input type="submit" value="Login"/>
     </form>
-    {% openid_form %}
 {% endblock %}
