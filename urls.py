@@ -1,7 +1,7 @@
 import socialregistration.urls
 from django.conf.urls.defaults import *
 from django.conf import settings
-from gypsum.positioning import views
+from gypsum.positioning import views, upload_views
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -25,8 +25,8 @@ urlpatterns = patterns('',
     (r'^(?P<username>\w+)/timeline$', views.user_timeline),
     (r'^(?P<username>\w+)/(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>\d{2})/(?P<number>\d+)/$', views.display_track),
     (r'^(?P<username>\w+)/(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>\d{2})/(?P<number>\d+)/positions$', views.get_track_data),
-    (r'^upload$', views.upload_tracks),
-    (r'^api/v1/upload$', views.upload_tracks_ws),
+    (r'^upload$', upload_views.upload_tracks),
+    (r'^api/v1/upload$', upload_views.upload_tracks_ws),
 )
 
 if settings.DEBUG:

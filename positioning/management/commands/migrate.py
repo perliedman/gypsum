@@ -9,9 +9,8 @@ from django.core.management.base import BaseCommand, CommandError
 
 from django.contrib.auth.models import User
 from positioning import legacy_models, models
+from positioning.gpxparser import create_gpx
 
-from elementtree.SimpleXMLWriter import XMLWriter
-from StringIO import StringIO
 import datetime
 
 def migrate_users():
@@ -68,8 +67,9 @@ def migrate_tracks():
             distance = t.distance,
             time = t.time,
             gpx = gpx,
-            positions = positions_new,
-            hash = gpx.__hash__())
+            positions = positions_new)
+
+        new_track.hash = hash(new_track)
 
         if t.has_weather:
             new_track.weather = models.Weather(
@@ -82,40 +82,6 @@ def migrate_tracks():
         i += 1
 
     return i
-
-def create_gpx(track, positions):
-    f = StringIO()
-    w = XMLWriter(f, 'utf-8')
-
-    gpx = w.start('gpx', creator='Gypsum', version='1.1')
-
-    w.start('trk')
-    w.start('name')
-    w.data(track.__unicode__())
-    w.end('name')
-
-    w.start('trkseg')
-
-    for p in positions:
-        w.start('trkpt', lat=str(p.latitude), lon=str(p.longitude))
-
-        if p.altitude != None:
-            w.start('ele')
-            w.data(str(p.altitude))
-            w.end('ele')
-        w.start('time')
-        w.data(datetime.datetime.strftime(p.time, '%Y-%m-%dT%H:%M:%S.%fZ'))
-        w.end('time')
-
-        w.end('trkpt')
-
-    w.end('trkseg')
-
-    w.end('trk')
-
-    w.close(gpx)
-
-    return f.getvalue()
 
 class Command(BaseCommand):
     args = ''

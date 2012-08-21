@@ -2,6 +2,8 @@ import sys, string
 from xml.dom import minidom, Node
 import datetime
 from gypsum.positioning.models import Position
+from elementtree.SimpleXMLWriter import XMLWriter
+from StringIO import StringIO
 
 class GPXParser:
   def __init__(self, filename):
@@ -31,3 +33,37 @@ class GPXParser:
             t = datetime.datetime.strptime(rfc3339, '%Y-%m-%dT%H:%M:%SZ')
         self.tracks[name].append(Position(latitude = lat, longitude = lon, altitude = ele, time = t))
 
+
+def create_gpx(track, positions):
+    f = StringIO()
+    w = XMLWriter(f, 'utf-8')
+
+    gpx = w.start('gpx', creator='Gypsum', version='1.1')
+
+    w.start('trk')
+    w.start('name')
+    w.data(track.__unicode__())
+    w.end('name')
+
+    w.start('trkseg')
+
+    for p in positions:
+        w.start('trkpt', lat=str(p.latitude), lon=str(p.longitude))
+
+        if p.altitude != None:
+            w.start('ele')
+            w.data(str(p.altitude))
+            w.end('ele')
+        w.start('time')
+        w.data(datetime.datetime.strftime(p.time, '%Y-%m-%dT%H:%M:%S.%fZ'))
+        w.end('time')
+
+        w.end('trkpt')
+
+    w.end('trkseg')
+
+    w.end('trk')
+
+    w.close(gpx)
+
+    return f.getvalue()

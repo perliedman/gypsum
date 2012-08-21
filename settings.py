@@ -85,6 +85,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.media",
     "django.core.context_processors.request",
     'django.core.context_processors.request',
+    'django.contrib.messages.context_processors.messages',
     'gypsum.context_processors.setting_tags',
 )
 
@@ -93,6 +94,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
 )
 
 AUTHENTICATION_BACKENDS = (
@@ -115,6 +117,7 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
+    'django.contrib.messages',
     'gypsum.positioning',
     'avatar',
     'djcelery',
@@ -124,3 +127,5 @@ CELERY_RESULT_BACKEND = "amqp"
 
 LOGIN_URL = '/accounts/login/'
 STATIC_URL = '/static'
+
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'

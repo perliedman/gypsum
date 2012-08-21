@@ -4,7 +4,7 @@
 	<div id="options">
 		<ul>
 			<li>
-				<a href="{% url gypsum.positioning.views.upload_tracks %}">Upload tracks</a>
+				<a href="{% url gypsum.positioning.upload_views.upload_tracks %}">Upload tracks</a>
 			</li>
 		</ul>
 	</div>
@@ -37,11 +37,11 @@
 		        {% if tracks.has_previous %}
 		            <a href="?page={{ tracks.previous_page_number }}">&lt; Previous</a>
 		        {% endif %}
-		
+
 		        <span class="current">
 		            Page {{ tracks.number }} of {{ tracks.paginator.num_pages }}.
 		        </span>
-		
+
 		        {% if tracks.has_next %}
 		            <a href="?page={{ tracks.next_page_number }}">Next &gt;</a>
 		        {% endif %}
