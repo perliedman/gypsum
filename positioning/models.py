@@ -105,7 +105,9 @@ class Track(models.Model):
         return str(datetime.timedelta(seconds = self.time))
 
     def __hash__(self):
-        return hash(self.gpx)
+        # Note: actually using hash(y) does not work with the
+        # migrate script. Fix this at some point.
+        return reduce(lambda x, y: x + hash(y.time), self.positions, 0)
 
     def get_pace_chart_url(self, width, height):
         if len(self.positions) == 0:
@@ -163,3 +165,6 @@ class Position(models.Model):
     longitude = models.FloatField()
     altitude = models.FloatField()
     time = models.DateTimeField()
+
+    def __hash__(self):
+        return hash(self.time)

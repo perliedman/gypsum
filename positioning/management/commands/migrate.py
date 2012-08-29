@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 from positioning import legacy_models, models
 from positioning.gpxparser import create_gpx
 
-import datetime
+from datetime import datetime
 
 def migrate_users():
     i = 0
@@ -49,6 +49,10 @@ def migrate_activities():
     return i
 
 def migrate_tracks():
+    def copy_time(t):
+        ts = t.timetuple()
+        return datetime(ts.tm_year, ts.tm_mon, ts.tm_mday, ts.tm_hour, ts.tm_min, ts.tm_sec)
+
     i = 0
     for t in legacy_models.LegacyTrack.objects.using('legacy').all():
         positions = legacy_models.Position.objects.using('legacy').filter(track = t).order_by('time')
@@ -69,13 +73,13 @@ def migrate_tracks():
             gpx = gpx,
             positions = positions_new)
 
-        new_track.hash = hash(new_track)
-
         if t.has_weather:
             new_track.weather = models.Weather(
                 temperature = t.temperature,
                 precipitation = t.precipitation,
                 conditions = t.weather_conditions)
+
+        new_track.hash = hash(new_track)
 
         new_track.save()
 
