@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Gypsum</title>
+
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/style.css"/>
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL}}/js/libs/leaflet-0.4.4/leaflet.css"/>
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL}}/js/libs/bootstrap-2.1.0/css/bootstrap.min.css"/>
+
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+        <script type="text/javascript" data-main="{{ STATIC_URL }}/js/main" src="{{ STATIC_URL }}/js/jam/require.js"></script>
+        <!--<script src='{{ STATIC_URL}}/js/jam/bootstrap/js/bootstrap-tab.js'></script>-->
+        <script src='{{ STATIC_URL}}/js/libs/leaflet-0.4.4/leaflet.js'></script>
+        <script src='{{ STATIC_URL}}/js/libs/wax-4.1.8-0/wax.leaf.min.js'></script>
+    </head>
+    <body>
+        <div id="history" class="span6 hide">
+            <div id="history-table-wrapper"></div>
+            <div id="history-throbber" class="hide">
+                <img src="{{ STATIC_URL }}/images/throbber.gif" alt="Loading" />
+                Loading...
+            </div>
+            <div id="history-refresh" class="hide">
+                <button id="history-refresh-button" class="btn">More...</button>
+            </div>
+        </div>
+        <div id="info" class="span6 hide">
+        </div>
+        <div id="map"></div>
+    </body>
+</html>
+

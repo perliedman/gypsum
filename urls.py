@@ -22,6 +22,7 @@ urlpatterns = patterns('',
     (r'^accounts/login/$', 'django.contrib.auth.views.login'),
 
     (r'^$', views.start_page),
+    (r'^tracks$', views.track_history),
     (r'^(?P<username>\w+)/timeline$', views.user_timeline),
     (r'^(?P<username>\w+)/(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>\d{2})/(?P<number>\d+)/$', views.display_track),
     (r'^(?P<username>\w+)/(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>\d{2})/(?P<number>\d+)/positions$', views.get_track_data),

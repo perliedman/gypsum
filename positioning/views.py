@@ -21,6 +21,8 @@ import datetime, re
 from django.template.context import RequestContext
 from StringIO import StringIO
 
+from avatar.templatetags.avatar_tags import avatar_url
+
 WEATHER_IMAGE_MAP =  {re.compile(r'^Clear$'): 'sun.png',
                       re.compile(r'^Partly Cloudy$'): 'partly_cloudy.png',
                       re.compile(r'^Scattered Clouds$'): 'partly_cloudy.png',
@@ -77,9 +79,9 @@ def create_markers(track):
             d = d + distance.distance((p.latitude, p.longitude), \
                 (last_pos.latitude, last_pos.longitude)).kilometers
 
-        current_kilometer = int(d / marker_spacing)
+        current_kilometer = int(d / marker_spacing) * marker_spacing
         if current_kilometer > last_km_counter:
-            info_points[count] = {'distance': current_kilometer * marker_spacing, \
+            info_points[count] = {'distance': current_kilometer, \
                             'total_time': str(p.time - positions[0].time), \
                             'pace': '%s %s' % (track.activity.format_speed(current_kilometer - last_km_counter, (p.time - last_info_point.time).seconds), track.activity.get_speed_format_display())}
             last_info_point = p
@@ -146,8 +148,34 @@ def start_page(request):
     for t in tracks.object_list:
         t.weather_image = get_weather_image(t)
 
-    return render_to_response('start_page.html', {'users': users, 'tracks': tracks},
+    return render_to_response('index.html', {'users': users, 'tracks': tracks},
                               context_instance=RequestContext(request))
+
+def track_history(request):
+    try:
+        offset = int(request.GET.get('offset', 0))
+    except ValueError:
+        offset = 0
+
+    tracks = Track.objects.order_by('date').reverse()[offset:offset + 20]
+    return HttpResponse(jsonencoder.dumps(map(lambda t: {
+            'name': t.name,
+            'activity': t.activity.name,
+            'activity_icon_url': t.activity.icon_url,
+            'distance': t.distance,
+            'duration': t.get_duration_string(),
+            'pace': t.get_pace_string(),
+            'owner': {
+                'name': t.owner.get_full_name(),
+                'id': t.owner.id,
+                'username': t.owner.username,
+                'avatar_url': avatar_url(t.owner, 32)
+            },
+            'date': t.date,
+            'number': t.number,
+            'details_url': reverse(get_track_data, args=[t.owner.username, str(t.date.year), '%02d' % t.date.month, '%02d' % t.date.day, str(t.number)])
+            #'details_url': reverse(get_track_data, kwargs={'username':t.owner.username, 'year':str(t.date.year), 'month':str(t.date.month), 'day': str(t.date.day), 'number': str(t.number)})
+        }, tracks)), mimetype='application/json')
 
 def user_timeline(request, username):
     user = User.objects.get(username__exact = username)

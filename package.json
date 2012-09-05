@@ -1,0 +1,19 @@
+{
+  "name": "gypsum",
+  "version": "0.0.1",
+  "description": "GPS track log",
+  "dependencies": {
+  },
+  "jam": {
+    "packageDir": "static/js/jam",
+    "baseUrl": "static/js",
+    "dependencies": {
+      "jquery": "1.7.2",
+      "underscore": null,
+      "backbone": null,
+      "bootstrap": null,
+      "handlebars": null,
+      "hbt": null
+    }
+  }
+}

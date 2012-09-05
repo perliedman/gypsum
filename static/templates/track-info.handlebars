@@ -1,0 +1,54 @@
+<div id="trackInfo" class="tabbable">
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#trackInfo-Overview">Overview</a></li>
+        <li><a href="#trackInfo-Pace">Pace</a></li>
+        <li><a href="#trackInfo-Elevation">Elevation</a></li>
+        <li><a href="#trackInfo-Details">Details</a></li>
+    </ul>
+    <div class="tab-content">
+        <div id="trackInfo-Overview" class="tab-pane active">
+            <table>
+                {{#if name}}
+                <tr id="trackNameRow">
+                    <td class="infoHeader">Name:</td>
+                    <td id="trackName">{{name}}</td>
+                </tr>
+                {{/if}}
+                <tr>
+                    <td class="infoHeader">Date:</td>
+                    <td id="trackDate">{{date}}</td>
+                </tr>
+                <tr>
+                    <td class="infoHeader">Distance:</td>
+                    <td id="trackDistance">{{numberFormat distance 1}}</td>
+                </tr>
+                <tr>
+                    <td class="infoHeader">Duration:</td>
+                    <td id="trackDuration">{{duration}}</td>
+                </tr>
+                <tr>
+                    <td class="infoHeader">Pace:</td>
+                    <td id="trackPace">{{pace}}</td>
+                </tr>
+                <tr>
+                    <td class="infoHeader">Time:</td>
+                    <td id="trackTime">{{start_time}} - {{end_time}} UTC</td>
+                </tr>
+            </table>
+        </div>
+        <div id="trackInfo-Pace" class="tab-pane">
+            <img id="paceChart" src="{{pace_chart_url}}" alt="Pace chart"/>
+        </div>
+        <div id="trackInfo-Elevation" class="tab-pane">
+            <img id="elevationChart" src="{{elevation_chart_url}}" alt="Elevation chart"/>
+        </div>
+        <div id="trackInfo-Details" class="tab-pane">
+            <table>
+                 <tr>
+                    <td class="infoHeader">Uploaded/created:</td>
+                    <td id="trackCreationTime">{{created_time}}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>

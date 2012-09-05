@@ -110,6 +110,25 @@ class Track(models.Model):
         return reduce(lambda x, y: x + hash(y.time), self.positions, 0)
 
     def get_pace_chart_url(self, width, height):
+        def calc_pace_and_dist_from_previous(acc, p):
+            last_p = acc[0]
+            s = acc[1]
+            pace = acc[2]
+            int_dist = acc[3]
+
+            ds = distance.distance((p.latitude, p.longitude), \
+                (last_p.latitude, last_p.longitude)).kilometers
+            s = s + int(ds * 1000)
+            dt = (p.time - last_p.time).seconds
+            if ds > 0:
+                pace.append(dt / ds)
+                int_dist.append(s)
+
+            acc[0] = p
+            acc[1] = s
+
+            return acc
+
         if len(self.positions) == 0:
             return ''
 
@@ -117,19 +136,13 @@ class Track(models.Model):
         int_dist = []
         s = 0
         last_p = None
-        for p in self.positions:
-            if last_p != None:
-                ds = distance.distance((p.latitude, p.longitude), \
-                    (last_p.latitude, last_p.longitude)).kilometers
-                s = s + int(ds * 1000)
-                dt = (p.time - last_p.time).seconds
-                if ds > 0:
-                    pace.append(dt / ds)
-                    int_dist.append(s)
 
-            last_p = p
-
-        int_pace = [int(p) for p in ema(pace, 20)]
+        r = reduce(calc_pace_and_dist_from_previous,
+            self.positions[1:len(self.positions)],
+            [self.positions[0], 0, [], []])
+        pace = r[2]
+        int_dist = r[3]
+        int_pace = [int(p) for p in ema(pace, 30)]
 
         min_pace = int(min(int_pace) * 0.95)
         max_pace = int(max(int_pace) / 0.95)
@@ -149,7 +162,7 @@ class Track(models.Model):
         if len(self.positions) == 0:
             return ''
 
-        int_elevations = [int(elevation) for elevation in ema([p.altitude for p in self.positions], 20)]
+        int_elevations = [int(elevation) for elevation in ema([p.altitude for p in self.positions], 30)]
 
         max_elev = int(max(int_elevations) / 0.95)
         min_elev = int(min(int_elevations) * 0.95)
