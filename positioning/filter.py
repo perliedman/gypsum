@@ -9,9 +9,16 @@ def ema(s, n):
 
     returns a numeric array of the exponential
     moving average
+
+    source: http://osdir.com/ml/python.matplotlib.general/2005-04/msg00044.html
     """
     ema = []
     j = 1
+
+    if len(s) <= 1:
+        return s
+
+    n = min(len(s) - 1, n)
 
     #get n sma first and calculate the next n period ema
     sma = sum(s[:n]) / n
