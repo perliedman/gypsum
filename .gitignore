@@ -1,3 +1,4 @@
 *.pyc
 *~
 /secrets.py
+/static/js/jam
