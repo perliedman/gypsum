@@ -5,15 +5,27 @@
 
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/style.css"/>
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL}}/js/libs/leaflet-0.4.4/leaflet.css"/>
-        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL}}/js/libs/bootstrap-2.1.0/css/bootstrap.min.css"/>
+        <link rel="stylesheet" type="text/css" href='{{ STATIC_URL}}/js/libs/leaflet-iconlabel/leaflet.iconlabel.js'/>
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL}}/js/jam/bootstrap/css/bootstrap.min.css"/>
 
         <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
         <script type="text/javascript" data-main="{{ STATIC_URL }}/js/main" src="{{ STATIC_URL }}/js/jam/require.js"></script>
         <!--<script src='{{ STATIC_URL}}/js/jam/bootstrap/js/bootstrap-tab.js'></script>-->
         <script src='{{ STATIC_URL}}/js/libs/leaflet-0.4.4/leaflet.js'></script>
+        <script src='{{ STATIC_URL}}/js/libs/leaflet-iconlabel/leaflet.iconlabel.js'></script>
         <script src='{{ STATIC_URL}}/js/libs/wax-4.1.8-0/wax.leaf.min.js'></script>
     </head>
     <body>
+        <div class="navbar">
+            <div class="navbar-inner">
+                <a class="brand" href="#">Gypsum</a>
+                <ul class="nav">
+                    <li class="active"><a href="#">Home</a></li>
+                    <li><a href="#">Link</a></li>
+                    <li><a href="#">Link</a></li>
+                </ul>
+            </div>
+        </div>
         <div id="history" class="span6 hide">
             <div id="history-table-wrapper"></div>
             <div id="history-throbber" class="hide">

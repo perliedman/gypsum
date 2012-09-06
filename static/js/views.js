@@ -2,8 +2,9 @@ define([
     'backbone',
     'hbt!../templates/track-row',
     'hbt!../templates/track-list-header',
-    'hbt!../templates/track-info'],
-    function(Backbone, trackRowTemplate, trackListHeaderTemplate, trackInfoTemplate) {
+    'hbt!../templates/track-info',
+    'hbt!../templates/marker-template'],
+    function(Backbone, trackRowTemplate, trackListHeaderTemplate, trackInfoTemplate, markerTemplate) {
 
     var TrackRow = Backbone.View.extend({
         tagName: 'tr',
@@ -65,9 +66,32 @@ define([
         }),
 
         TrackMap: Backbone.View.extend({
+            renderTime: 5 * 1000, // milliseconds
+
+            lineStyles: [
+                {
+                    color: '#000000',
+                    opacity: 0.2,
+                    weight: 9
+                },
+                {
+                    color: '#ffffff',
+                    opacity: 1,
+                    weight: 6
+                },
+                {
+                    color: '#ff4000',
+                    opacity: 1,
+                    weight: 3
+                }
+            ],
+
             initialize: function(options) {
                 this.map = options.map;
-                this.markers = [];
+                this.markers = new L.FeatureGroup();
+                this.map.addLayer(this.markers);
+                this.trackLines = new L.FeatureGroup();
+                this.map.addLayer(this.trackLines);
                 this.timer = null;
             },
 
@@ -82,48 +106,58 @@ define([
                     that.points.push(latlng);
                 });
 
-                this.trackLine = new L.Polyline([], {
-                    color: '#ff0000',
-                    opacity: 0.6,
-                    weight: 6
+                this.positionIndex = 0;
+
+                _.each(this.lineStyles, function(style) {
+                    var line = new L.Polyline([], style);
+                    that.trackLines.addLayer(line);
                 });
 
-                this.map.addLayer(this.trackLine);
                 this.map.fitBounds(bounds);
 
                 this.infoPoints = this.model.get('info_points');
 
+                this.renderStart = Date.now();
                 this.timer = setTimeout(function() { that.appendPath(); }, 0);
 
                 return this;
             },
 
             appendPath: function() {
-                var path = this.trackLine.getLatLngs(),
-                    that = this;
-                if (path.length < this.points.length) {
-                    var infoPoint = this.infoPoints[path.length];
-                    if (infoPoint) {
-                        var marker = new L.Marker(this.points[path.length], {
-                            title: infoPoint.distance + "km"
-                        });
-                        marker.bindPopup('<em>' + infoPoint.distance + 'km</em><br/>'
-                                + '<em>Total time: ' + infoPoint.total_time + '</em></br/>'
-                                + '<em>Speed: ' + infoPoint.pace + '</em><br/>');
-                        this.map.addLayer(marker);
-                        this.markers.push(marker);
+                var that = this;
+                if (this.positionIndex < this.points.length) {
+                    var expectedNumberPositions = Math.min(Math.ceil(this.points.length * (Date.now() - this.renderStart) / this.renderTime), this.points.length),
+                        positionsToAdd = expectedNumberPositions - this.positionIndex;
+                        spliceArgs = [this.positionIndex, 0];
+
+                    for (var i = this.positionIndex; i < this.positionIndex + positionsToAdd; i++) {
+                        var infoPoint = this.infoPoints[i];
+                        if (infoPoint) {
+                            var title = infoPoint.distance + " km",
+                                marker = new L.Marker(this.points[i], {
+                                    title: title,
+                                    icon: new L.Icon.Label.Default({ labelText: title})
+                                });
+                            marker.bindPopup(markerTemplate(infoPoint));
+                            this.markers.addLayer(marker);
+                        }
+                        spliceArgs.push(this.points[i]);
                     }
 
-                    this.trackLine.spliceLatLngs(path.length, 0, this.points[path.length]);
+                    this.trackLines.eachLayer(function(line) {
+                        L.Polyline.prototype.spliceLatLngs.apply(line, spliceArgs);
+                    });
+
+                    this.positionIndex += positionsToAdd;
+
                     this.timer = setTimeout(function() { that.appendPath(); }, 0);
                 }
             },
 
             clear: function() {
-                var that = this;
                 clearTimeout(this.timer);
-                this.map.removeLayer(this.trackLine);
-                _.each(this.markers, function(marker) { that.map.removeLayer(marker); });
+                this.map.removeLayer(this.markers);
+                this.map.removeLayer(this.trackLines);
             }
         })
     };
