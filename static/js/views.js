@@ -69,16 +69,19 @@ define([
             renderTime: 5 * 1000, // milliseconds
 
             lineStyles: [
+                // Shadow
                 {
                     color: '#000000',
                     opacity: 0.2,
                     weight: 9
                 },
+                // Casing
                 {
                     color: '#ffffff',
                     opacity: 1,
                     weight: 6
                 },
+                // Line
                 {
                     color: '#ff4000',
                     opacity: 1,
@@ -133,10 +136,11 @@ define([
                     for (var i = this.positionIndex; i < this.positionIndex + positionsToAdd; i++) {
                         var infoPoint = this.infoPoints[i];
                         if (infoPoint) {
-                            var title = infoPoint.distance + " km",
-                                marker = new L.Marker(this.points[i], {
-                                    title: title,
-                                    icon: new L.Icon.Label.Default({ labelText: title})
+                            var marker = new L.Marker(this.points[i], {
+                                    title: infoPoint.distance + " km",
+                                    icon: new L.Icon.Label.Default({
+                                        labelText: infoPoint.distance + "&nbsp;km"
+                                    })
                                 });
                             marker.bindPopup(markerTemplate(infoPoint));
                             this.markers.addLayer(marker);
