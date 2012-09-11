@@ -5,7 +5,8 @@ require([
   './models',
   './views',
   'handlebars',
-  'backbone'
+  'backbone',
+  './jam/bootstrap/js/bootstrap-tab'
   ], function($, Map, track, models, views, Handlebars, Backbone) {
 
   Handlebars.registerHelper('numberFormat', function(number, maxDecimals) {
@@ -57,8 +58,8 @@ require([
           map: map
         }).render();
 
-        $('#info').show();
-        $('#history').hide();
+        $('#info').show('slide');
+        $('#history').hide('slide');
       }});
     }
   }),
@@ -90,9 +91,9 @@ require([
       $('#history-throbber').hide();
       if (rowsFetched === null || rowsFetched > 0) {
         offset += rowsFetched;
-        $('#history-refresh').show();
+        $('#history-refresh').show('slide');
       } else {
-        $('#history-refresh').hide();
+        $('#history-refresh').hide('slide');
       }
     });
 
