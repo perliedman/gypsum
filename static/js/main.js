@@ -6,8 +6,15 @@ require([
   './views',
   'handlebars',
   'backbone',
+  './router',
   './jam/bootstrap/js/bootstrap-tab'
-  ], function($, Map, track, models, views, Handlebars, Backbone) {
+  ], function($, Map, track, models, views, Handlebars, Backbone, Router) {
+
+  var map = Map.create('map'),
+      history = setupHistory(),
+      router = new Router({map: map, history: history});
+
+  Backbone.history.start();
 
   Handlebars.registerHelper('numberFormat', function(number, maxDecimals) {
     var f = 1;
@@ -18,55 +25,13 @@ require([
     return parseInt(number * f) / f;
   });
 
-  var map = Map.create('map'),
-      trackMapView = null,
-      hasFetchedHistory = false;
-
-  var Router = Backbone.Router.extend({
-    routes: {
-      '': 'home',
-      ':user/:year/:month/:day/:number': 'displayTrack'
-    },
-
-    home: function() {
-      if (!hasFetchedHistory) {
-        history.fetch({
-          success: function() {
-            hasFetchedHistory = true;
-          }
-        });
-      }
-
-      $('#history').show();
-    },
-
-    displayTrack: function(user, year, month, day, number) {
-      var model = new models.Track({id: user + '/' + year + '/' + month + '/' + day + '/' + number});
-      model.fetch({ success: function(model) {
-        new views.TrackInformation({
-          model: model,
-          el: $('#info')
-        }).render();
-
-        if (trackMapView) {
-          trackMapView.clear();
-        }
-
-        trackMapView = new views.TrackMap({
-          model: model,
-          el: $('#map'),
-          map: map
-        }).render();
-
-        $('#info').show('slide');
-        $('#history').hide('slide');
-      }});
-    }
-  }),
-    router = new Router(),
-    history = setupHistory();
-
-  Backbone.history.start();
+  function setupLogin() {
+    $('#login-button').click(function() {
+      var username = $('#login-control input[type=text]'),
+          password = $('#login-control input[type=password]');
+      alert(username + ' ' + password);
+    })
+  }
 
   function setupHistory() {
     var History = models.TrackCollection.extend({

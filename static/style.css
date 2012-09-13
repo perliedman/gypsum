@@ -31,6 +31,10 @@ body {
     z-index: 2;
 }
 
+#history tbody tr {
+	cursor: pointer;
+}
+
 #history-throbber, #history-refresh {
 	text-align: center;
 }
