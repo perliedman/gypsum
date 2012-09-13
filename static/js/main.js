@@ -14,6 +14,8 @@ require([
       history = setupHistory(),
       router = new Router({map: map, history: history});
 
+  setupLogin();
+
   Backbone.history.start();
 
   Handlebars.registerHelper('numberFormat', function(number, maxDecimals) {
@@ -26,11 +28,34 @@ require([
   });
 
   function setupLogin() {
+    var login;
+
     $('#login-button').click(function() {
-      var username = $('#login-control input[type=text]'),
-          password = $('#login-control input[type=password]');
-      alert(username + ' ' + password);
-    })
+      var username = $('#login-control input[type=text]').val(),
+          password = $('#login-control input[type=password]').val();
+      login = new models.Login({username: username, password: password});
+      login.save({}, {
+        success: function(model) {
+          if (model.get('success')) {
+            login = model;
+            new views.Login({model: login, el: $('#logged-in-control')}).render();
+            $('#login-control').hide();
+            $('#logged-in-control').show();
+          } else {
+            alert(model.get('code'));
+          }
+        },
+        error: function() { alert('Login failed. :(');}
+      });
+    });
+
+    $('#logout-button').click(function() {
+      if (login) {
+        login.destroy();
+        $('#login-control').show();
+        $('#logged-in-control').hide();
+      }
+    });
   }
 
   function setupHistory() {

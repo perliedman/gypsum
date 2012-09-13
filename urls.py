@@ -28,6 +28,7 @@ urlpatterns = patterns('',
     (r'^(?P<username>\w+)/(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>\d{2})/(?P<number>\d+)/positions$', views.get_track_data),
     (r'^upload$', upload_views.upload_tracks),
     (r'^api/v1/upload$', upload_views.upload_tracks_ws),
+    (r'^api/v1/login$', views.login),
 )
 
 if settings.DEBUG:

@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate
+import django.contrib.auth
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
@@ -9,6 +9,7 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django import forms
 import jsonencoder
 import simplejson as json
+import uuid
 from tasks import get_track_weather
 from zipfile import ZipFile, BadZipfile
 
@@ -210,6 +211,30 @@ def user_timeline(request, username):
 
     return render_to_response('user_timeline.html', {'user': user, 'months': months},
                               context_instance=RequestContext(request))
+
+def login(request):
+    if request.is_ajax():
+        if request.method == 'POST':
+            data = jsonencoder.loads(request.raw_post_data)
+
+            user = django.contrib.auth.authenticate(username=data['username'], password=data['password'])
+            del data['password']
+            if user is not None:
+                if user.is_active:
+                    django.contrib.auth.login(request, user)
+                    data['success'] = True
+                    data['id'] = uuid.uuid1().hex
+                else:
+                    data['success'] = False
+                    data['code'] = 'USER_DISABLED'
+            else:
+                data['success'] = False
+                data['code'] = 'WRONG_USER_PASSWORD'
+
+            return HttpResponse(jsonencoder.dumps(data), mimetype='application/json')
+        elif request.method == 'DELETE':
+            django.contrib.auth.logout(request)
+            return HttpResponse(jsonencoder.dumps({'success': True}), mimetype='application/json')
 
 def get_tracks_by_date(owner, year, month, day):
     d = datetime.datetime(year, month, day)

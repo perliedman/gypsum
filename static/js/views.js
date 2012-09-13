@@ -163,6 +163,13 @@ define([
                 this.map.removeLayer(this.markers);
                 this.map.removeLayer(this.trackLines);
             }
+        }),
+
+        Login: Backbone.View.extend({
+            render: function() {
+                $('#username').text(this.model.get('username'))
+                return this;
+            }
         })
     };
 });
