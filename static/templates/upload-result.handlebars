@@ -1,0 +1,69 @@
+<p>{{numberTracks}} tracks where found.
+{{#if groups.save}}
+    {{groups.save.length}} new tracks where saved.
+{{else}}
+    No new tracks where saved.
+{{/if}}
+</p>
+<div class="accordion" id="upload-results">
+    {{#if groups.save.length}}
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" data-parent="#upload-results" href="#new-tracks">
+                New tracks
+            </a>
+        </div>
+        <div id="new-tracks" class="accordion-body collapse in">
+            <div class="accordion-inner">
+                <ul>
+                {{#each groups.save}}
+                    <li>
+                        {{date}} <img src="{{activity_icon_url}}"/> {{numberFormat distance 1}} km, {{duration}} ({{pace}})
+                    </li>
+                {{/each}}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {{/if}}
+    {{#if groups.exists.length}}
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" data-parent="#upload-results" href="#existing-tracks">
+                Existing tracks
+            </a>
+        </div>
+        <div id="existing-tracks" class="accordion-body collapse">
+            <div class="accordion-inner">
+                <ul>
+                {{#each groups.exists}}
+                    <li>
+                        {{date}} <img src="{{activity_icon_url}}"/> {{numberFormat distance 1}} km, {{duration}} ({{pace}})
+                    </li>
+                {{/each}}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {{/if}}
+    {{#if groups.too_early.length}}
+    <div class="accordion-group">
+        <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" data-parent="#upload-results" href="#ignored-tracks">
+                Ignored tracks
+            </a>
+        </div>
+        <div id="ignored-tracks" class="accordion-body collapse">
+            <div class="accordion-inner">
+                <ul>
+                {{#each groups.too_early}}
+                    <li>
+                        {{date}} <img src="{{activity_icon_url}}"/> {{numberFormat distance 1}} km, {{duration}} ({{pace}})
+                    </li>
+                {{/each}}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {{/if}}
+</div>

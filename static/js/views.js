@@ -170,6 +170,10 @@ define([
                 $('#username').text(this.model.get('username'))
                 return this;
             }
+        }),
+
+        TrackUpload: Backbone.View.extend({
+
         })
     };
 });

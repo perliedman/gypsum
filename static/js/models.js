@@ -45,6 +45,12 @@ define(['backbone'], function(Backbone) {
             url: function() {
                 return this.id + "/positions";
             }
+        }),
+
+        Login: Backbone.Model.extend({
+            url: function() {
+                return 'api/v1/login'
+            }
         })
     };
 });

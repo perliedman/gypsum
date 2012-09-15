@@ -7,14 +7,20 @@ require([
   'handlebars',
   'backbone',
   './router',
-  './jam/bootstrap/js/bootstrap-tab'
-  ], function($, Map, track, models, views, Handlebars, Backbone, Router) {
+  'hbt!../templates/upload-result',
+  './jam/bootstrap/js/bootstrap-tab',
+  './jam/bootstrap/js/bootstrap-modal',
+  './jam/bootstrap/js/bootstrap-transition',
+  './jam/bootstrap/js/bootstrap-collapse'
+  ], function($, Map, track, models, views, Handlebars, Backbone, Router, uploadResult) {
 
   var map = Map.create('map'),
       history = setupHistory(),
-      router = new Router({map: map, history: history});
+      router = new Router({map: map, history: history}),
+      login;
 
-  setupLogin();
+  setupLogin(window.currentLogin);
+  setupUpload();
 
   Backbone.history.start();
 
@@ -27,20 +33,19 @@ require([
     return parseInt(number * f) / f;
   });
 
-  function setupLogin() {
-    var login;
+  function setupLogin(currentLogin) {
+    if (currentLogin) {
+      setLogin(new models.Login(currentLogin));
+    }
 
     $('#login-button').click(function() {
       var username = $('#login-control input[type=text]').val(),
           password = $('#login-control input[type=password]').val();
-      login = new models.Login({username: username, password: password});
-      login.save({}, {
+
+      new models.Login({username: username, password: password}).save({}, {
         success: function(model) {
           if (model.get('success')) {
-            login = model;
-            new views.Login({model: login, el: $('#logged-in-control')}).render();
-            $('#login-control').hide();
-            $('#logged-in-control').show();
+            setLogin(model);
           } else {
             alert(model.get('code'));
           }
@@ -50,12 +55,81 @@ require([
     });
 
     $('#logout-button').click(function() {
+      setLoggedOut();
+    });
+  }
+
+  function setLogin(model) {
+    login = model;
+    new views.Login({model: login, el: $('#logged-in-control')}).render();
+    $('#login-control').hide();
+    $('#logged-in-control').show();
+    $('#logged-in-menu').show();
+  }
+
+  function setLoggedOut() {
       if (login) {
         login.destroy();
-        $('#login-control').show();
-        $('#logged-in-control').hide();
       }
+
+      $('#login-control').show();
+      $('#logged-in-control').hide();
+      $('#logged-in-menu').hide();
+
+      login = null;
+  }
+
+  function setupUpload() {
+    $('#upload-track-button').click(function() {
+      var formData = new FormData($('#upload-track-form')[0]);
+      $.ajax({
+        url: 'api/v1/upload',
+        type: 'POST',
+        xhr: function() {
+          var _xhr = $.ajaxSettings.xhr();
+          if (_xhr.upload) {
+            _xhr.upload.addEventListener('progress', uploadProgress, false);
+          }
+
+          return _xhr;
+        },
+        beforeSend: function() {
+          $('progress').show();
+        },
+        success: function(data) {
+          $('progress').hide();
+
+          var groups = _.reduce(data.tracks, function(memo, trackData) {
+            if (!memo[trackData.action]) {
+              memo[trackData.action] = [];
+            }
+
+            memo[trackData.action].push(trackData.track);
+            return memo;
+          }, {});
+
+          $('#upload-result').html(uploadResult({groups: groups, numberTracks: data.tracks.length})).show('slide');
+        },
+        error: function() {
+          $('progress').hide();
+          alert('Error! :(');
+        },
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false
+      });
     });
+  }
+
+  function uploadProgress(e) {
+    if (e.lengthComputable) {
+      if (e.loaded < e.total) {
+        $('progress').attr({value: e.loaded, max: e.total});
+      } else {
+        $('progress').attr({value: null, max: null});
+      }
+    }
   }
 
   function setupHistory() {

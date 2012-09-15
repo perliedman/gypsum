@@ -18,16 +18,20 @@ body {
 	height: 100%;
 }
 
-#history {
+.panel {
+    position: absolute;
 	border-radius: 8px;
     box-shadow: #444 1px 1px 4px;
 	padding: 16px;
-    position: absolute;
+    background: white;
+    z-index: 1;
+}
+
+#history {
     right: 8px;
     top: 56px;
     height: 60%;
     overflow-y: auto;
-    background: white;
     z-index: 2;
 }
 
@@ -40,15 +44,15 @@ body {
 }
 
 #info {
-	border-radius: 8px;
-    box-shadow: #444 1px 1px 4px;
-	padding: 16px;
-    position: absolute;
     right: 8px;
     bottom: 32px;
     height: 220px;
-    background: white;
-    z-index: 1;
+}
+
+#upload-track {
+    left: 8px;
+    top: 56px;
+    height: 220px;
 }
 
 .infoHeader {

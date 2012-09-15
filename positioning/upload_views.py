@@ -17,6 +17,7 @@ from django.contrib import messages
 from StringIO import StringIO
 from gypsum.positioning.gpxparser import create_gpx
 from gypsum.positioning.views import get_tracks_by_date, user_timeline
+import jsonencoder
 
 class UploadTrackForm(forms.Form):
     track_data = forms.FileField(label = 'File to upload',
@@ -163,3 +164,17 @@ def upload_tracks(request):
         form = UploadTrackForm()
 
     return render_to_response('upload_track.html', {'form': form}, context_instance=RequestContext(request))
+
+@login_required
+def upload_tracks_ajax(request):
+    if request.method == 'POST':
+        form = UploadTrackForm(request.POST, request.FILES)
+        if form.is_valid():
+            tracks = upload_tracks_from_stream(request.user, form.cleaned_data['track_data'], form.cleaned_data['only_newer'])
+
+            result = map(lambda (track, action): {'action': action, 'track': track.summary()}, tracks)
+            return HttpResponse(jsonencoder.dumps({'success': True, 'tracks': result}), mimetype='application/json');
+        else:
+            return HttpResponse(jsonencoder.dumps({'success': false, 'code': 'INVALID_FORM'}), mimetype='application/json');
+    else:
+        return HttpResponse(jsonencoder.dumps({'success': false, 'code': 'REQUIRES_POST'}), mimetype='application/json');

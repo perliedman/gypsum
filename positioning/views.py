@@ -159,24 +159,7 @@ def track_history(request):
         offset = 0
 
     tracks = Track.objects.order_by('date').reverse()[offset:offset + 20]
-    return HttpResponse(jsonencoder.dumps(map(lambda t: {
-            'name': t.name,
-            'activity': t.activity.name,
-            'activity_icon_url': t.activity.icon_url,
-            'distance': t.distance,
-            'duration': t.get_duration_string(),
-            'pace': t.get_pace_string(),
-            'owner': {
-                'name': t.owner.get_full_name(),
-                'id': t.owner.id,
-                'username': t.owner.username,
-                'avatar_url': avatar_url(t.owner, 32)
-            },
-            'date': t.date,
-            'number': t.number,
-            'details_url': reverse(get_track_data, args=[t.owner.username, str(t.date.year), '%02d' % t.date.month, '%02d' % t.date.day, str(t.number)])
-            #'details_url': reverse(get_track_data, kwargs={'username':t.owner.username, 'year':str(t.date.year), 'month':str(t.date.month), 'day': str(t.date.day), 'number': str(t.number)})
-        }, tracks)), mimetype='application/json')
+    return HttpResponse(jsonencoder.dumps(map(lambda t: t.summary(), tracks)), mimetype='application/json')
 
 def user_timeline(request, username):
     user = User.objects.get(username__exact = username)

@@ -14,16 +14,24 @@
         <script src='{{ STATIC_URL}}/js/libs/leaflet-0.4.4/leaflet.js'></script>
         <script src='{{ STATIC_URL}}/js/libs/leaflet-iconlabel/leaflet.iconlabel.js'></script>
         <script src='{{ STATIC_URL}}/js/libs/wax-4.1.8-0/wax.leaf.min.js'></script>
+        <script>
+        {% if user.is_authenticated %}
+            window.currentLogin = {username: "{{ user.username }}", id: "x"};
+        {% else %}
+            window.currentLogin = null;
+        {% endif %}
+        </script>
     </head>
     <body>
         <div class="navbar">
             <div class="navbar-inner">
                 <a class="brand" href="#">Gypsum</a>
-                <ul class="nav">
-                    <li class="active"><a href="#">Home</a></li>
-                    <li><a href="#">Link</a></li>
-                    <li><a href="#">Link</a></li>
-                </ul>
+                <div id="logged-in-menu" class="hide">
+                    <ul class="nav">
+                        <li class="active"><a href="#">Home</a></li>
+                        <li><a href="#upload">Upload</a></li>
+                    </ul>
+                </div>
 
                 <div class="pull-right">
                     <div id="login-control">
@@ -40,7 +48,7 @@
                 </div>
             </div>
         </div>
-        <div id="history" class="span6 hide">
+        <div id="history" class="panel span6 hide">
             <div id="history-table-wrapper"></div>
             <div id="history-throbber" class="hide">
                 <img src="{{ STATIC_URL }}/images/throbber.gif" alt="Loading" />
@@ -50,7 +58,22 @@
                 <button id="history-refresh-button" class="btn">More...</button>
             </div>
         </div>
-        <div id="info" class="span6 hide">
+        <div id="info" class="panel span6 hide">
+        </div>
+        <div id="upload-track-modal" class="modal hide fade">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3>Upload tracks</h3>
+            </div>
+            <div class="modal-body">
+                <form id="upload-track-form" enctype="multipart/form-data">
+                    <input type="hidden" name="only_newer" value="0"/>
+                    <input name="track_data" type="file" />
+                    <input id="upload-track-button" type="button" value="Upload" />
+                </form>
+                <progress class="hide"></progress>
+                <div id="upload-result" class="alert alert-success hide"></div>
+            </div>
         </div>
         <div id="map"></div>
     </body>

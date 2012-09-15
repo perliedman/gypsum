@@ -3,6 +3,8 @@ from django.conf import settings
 from django.db import models
 from djangotoolbox.fields import ListField
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
+from avatar.templatetags.avatar_tags import avatar_url
 from pygooglechart import SimpleLineChart, Axis
 from geopy import distance
 from filter import ema
@@ -62,7 +64,7 @@ class Track(models.Model):
 
     @models.permalink
     def get_absolute_url(self):
-        return ('gypsum.positioning.views.display_track', (),
+        return ('gypsum.positioning.views.get_track_data', (),
                 {'username': self.owner.username,
                  'year': self.date.year,
                  'month': '%02d' % self.date.month,
@@ -108,6 +110,29 @@ class Track(models.Model):
         # Note: actually using hash(y) does not work with the
         # migrate script. Fix this at some point.
         return reduce(lambda x, y: x + hash(y.time), self.positions, 0)
+
+    def summary(self):
+        summary = {
+            'name': self.name,
+            'activity': self.activity.name,
+            'activity_icon_url': self.activity.icon_url,
+            'distance': self.distance,
+            'duration': self.get_duration_string(),
+            'pace': self.get_pace_string(),
+            'owner': {
+                'name': self.owner.get_full_name(),
+                'id': self.owner.id,
+                'username': self.owner.username,
+                'avatar_url': avatar_url(self.owner, 32)
+            },
+            'date': self.date,
+            'number': self.number,
+        }
+
+        if self.pk:
+            summary['details_url'] = self.get_absolute_url()
+
+        return summary
 
     def get_pace_chart_url(self, width, height):
         def calc_pace_and_dist_from_previous(acc, p):

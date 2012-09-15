@@ -15,7 +15,8 @@ define([
 
       routes: {
         '': 'home',
-        ':user/:year/:month/:day/:number': 'displayTrack'
+        ':user/:year/:month/:day/:number': 'displayTrack',
+        'upload': 'upload'
       },
 
       home: function() {
@@ -54,6 +55,19 @@ define([
           $('#info').show('slide');
           $('#history').hide('slide');
         }});
+      },
+
+      upload: function() {
+        $('#upload-result').hide();
+        $('#upload-track-modal').modal('show');
+      },
+
+      clearPanels: function() {
+        $('#history').hide('slide');
+        $('#info').hide('slide');
+        if (this.trackMapView) {
+          this.trackMapView.clear();
+        }
       }
     });
 });
