@@ -9,6 +9,13 @@ try:
 except IOError:
     pass
 
+import os
+import django
+# calculated paths for django and the site
+# used as starting points for various other paths
+DJANGO_ROOT = os.path.dirname(os.path.realpath(django.__file__))
+SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
+
 if 'databases' in secretSetup:
     DATABASES = secretSetup['databases']
 else:
@@ -52,11 +59,9 @@ SITE_ID = secretSetup['site_id']
 # to load the internationalization machinery.
 USE_I18N = True
 
-APP_DIR = '/home/per/Documents/workspace/gypsum'
-
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-MEDIA_ROOT = APP_DIR + '/upload/'
+MEDIA_ROOT = os.path.join(SITE_ROOT, 'upload')
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
@@ -108,7 +113,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    APP_DIR + '/templates',
+    os.path.join(SITE_ROOT, 'templates'),
 )
 
 INSTALLED_APPS = (
