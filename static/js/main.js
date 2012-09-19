@@ -134,7 +134,7 @@ require([
 
   function setupHistory() {
     var History = models.TrackCollection.extend({
-        url: '/tracks',
+        url: 'tracks',
       }),
       offset = 0,
       history = new History(),
