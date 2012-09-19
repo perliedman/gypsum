@@ -3,18 +3,18 @@
 import djcelery
 djcelery.setup_loader()
 
-secretSetup = {}
-try:
-    execfile('secrets.py', {}, secretSetup)
-except IOError:
-    pass
-
 import os
 import django
 # calculated paths for django and the site
 # used as starting points for various other paths
 DJANGO_ROOT = os.path.dirname(os.path.realpath(django.__file__))
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
+
+secretSetup = {}
+try:
+    execfile(os.path.join(SITE_ROOT, 'secrets.py'), {}, secretSetup)
+except IOError:
+    pass
 
 if 'databases' in secretSetup:
     DATABASES = secretSetup['databases']
@@ -53,7 +53,10 @@ TIME_ZONE = 'Europe/Stockholm'
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-us'
 
-SITE_ID = secretSetup['site_id']
+if 'site_id' in secretSetup:
+    SITE_ID = secretSetup['site_id']
+else:
+    SITE_ID = 1
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
