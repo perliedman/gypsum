@@ -16,11 +16,20 @@ define([
       routes: {
         '': 'home',
         ':user/:year/:month/:day/:number': 'displayTrack',
-        'upload': 'upload'
+        'upload': 'upload',
+        'add-track': 'addTrack'
       },
 
       home: function() {
         var that = this;
+
+        // This is a hack to initialize the map view if it
+        // hasn't already been initialized.
+        try {
+          this.map.getCenter();
+        } catch (exception) {
+          this.map.setView([57.74, 11.93], 10);
+        }
 
         if (!this.hasFetchedHistory) {
           this.history.fetch({
@@ -60,6 +69,14 @@ define([
       upload: function() {
         $('#upload-result').hide();
         $('#upload-track-modal').modal('show');
+      },
+
+      addTrack: function() {
+        this.clearPanels();
+        $('#add-track-control').show();
+
+        var handler = new L.Polyline.Draw(this.map, {});
+        handler.enable();
       },
 
       clearPanels: function() {

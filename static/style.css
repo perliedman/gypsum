@@ -25,6 +25,7 @@ body {
 	padding: 16px;
     background: white;
     z-index: 1;
+    overflow-y: auto;
 }
 
 #history {

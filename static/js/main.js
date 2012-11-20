@@ -1,7 +1,6 @@
 require([
   'jquery',
   './map',
-  './track',
   './models',
   './views',
   'handlebars',
@@ -12,7 +11,7 @@ require([
   './jam/bootstrap/js/bootstrap-modal',
   './jam/bootstrap/js/bootstrap-transition',
   './jam/bootstrap/js/bootstrap-collapse'
-  ], function($, Map, track, models, views, Handlebars, Backbone, Router, uploadResult) {
+  ], function($, Map, models, views, Handlebars, Backbone, Router, uploadResult) {
 
   var map = Map.create('map'),
       history = setupHistory(),

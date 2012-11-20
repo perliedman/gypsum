@@ -59,7 +59,7 @@ define([
 
         TrackInformation: Backbone.View.extend({
             render: function() {
-                this.$el.html(trackInfoTemplate(this.model.toJSON()));
+                this.$el.html(trackInfoTemplate(this.model.getInfo()));
 
                 return this;
             }

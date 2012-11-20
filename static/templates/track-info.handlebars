@@ -24,7 +24,7 @@
                 </tr>
                 <tr>
                     <td class="infoHeader">Duration:</td>
-                    <td id="trackDuration">{{duration}}</td>
+                    <td id="trackDuration">{{duration_string}}</td>
                 </tr>
                 <tr>
                     <td class="infoHeader">Pace:</td>
@@ -43,10 +43,27 @@
             <img id="elevationChart" src="{{elevation_chart_url}}" alt="Elevation chart"/>
         </div>
         <div id="trackInfo-Details" class="tab-pane">
-            <table>
+            <table class="table">
                  <tr>
                     <td class="infoHeader">Uploaded/created:</td>
                     <td id="trackCreationTime">{{created_time}}</td>
+                </tr>
+                 <tr>
+                    <td class="infoHeader">Positions:</td>
+                    <td id="trackCreationTime">
+                        {{positions.length}} ({{numberFormat position_density 2}} positions/second)
+
+                        {{#if data_gaps.length}}
+                        <p>
+                            <em>Data gaps:</em>
+                            <ul>
+                            {{#each data_gaps}}
+                                <li>{{duration}} seconds, {{numberFormat distance 0}} m</li>
+                            {{/each}}
+                            </ul>
+                        </p>
+                        {{/if}}
+                    </td>
                 </tr>
             </table>
         </div>

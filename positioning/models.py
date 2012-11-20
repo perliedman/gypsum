@@ -117,7 +117,8 @@ class Track(models.Model):
             'activity': self.activity.name,
             'activity_icon_url': self.activity.icon_url,
             'distance': self.distance,
-            'duration': self.get_duration_string(),
+            'duration': self.time,
+            'duration_string': self.get_duration_string(),
             'pace': self.get_pace_string(),
             'owner': {
                 'name': self.owner.get_full_name(),

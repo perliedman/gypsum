@@ -107,7 +107,6 @@ MIDDLEWARE_CLASSES = (
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    'socialregistration.auth.OpenIDAuth',
 )
 
 ROOT_URLCONF = 'gypsum.urls'

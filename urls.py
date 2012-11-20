@@ -1,4 +1,3 @@
-import socialregistration.urls
 from django.conf.urls.defaults import *
 from django.conf import settings
 from gypsum.positioning import views, upload_views
@@ -17,7 +16,6 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     (r'^admin/', include(admin.site.urls)),
-    (r'^registration/', include(socialregistration.urls)),
     (r'^avatar/', include('avatar.urls')),
     (r'^accounts/login/$', 'django.contrib.auth.views.login'),
 

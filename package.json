@@ -13,7 +13,8 @@
       "backbone": null,
       "bootstrap": null,
       "handlebars": null,
-      "hbt": null
+      "hbt": null,
+      "moment": null
     }
   }
 }

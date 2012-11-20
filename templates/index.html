@@ -6,6 +6,7 @@
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/style.css"/>
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL}}/js/libs/leaflet-0.4.4/leaflet.css"/>
         <link rel="stylesheet" type="text/css" href='{{ STATIC_URL}}/js/libs/leaflet-iconlabel/leaflet.iconlabel.css'/>
+        <link rel="stylesheet" type="text/css" href='{{ STATIC_URL}}/js/libs/leaflet-draw/leaflet.draw.css'/>
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL}}/js/jam/bootstrap/css/bootstrap.min.css"/>
 
         <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
@@ -13,6 +14,7 @@
         <!--<script src='{{ STATIC_URL}}/js/jam/bootstrap/js/bootstrap-tab.js'></script>-->
         <script src='{{ STATIC_URL}}/js/libs/leaflet-0.4.4/leaflet.js'></script>
         <script src='{{ STATIC_URL}}/js/libs/leaflet-iconlabel/leaflet.iconlabel.js'></script>
+        <script src='{{ STATIC_URL}}/js/libs/leaflet-draw/leaflet.draw.js'></script>
         <script src='{{ STATIC_URL}}/js/libs/wax-4.1.8-0/wax.leaf.min.js'></script>
         <script>
         {% if user.is_authenticated %}
@@ -30,8 +32,14 @@
                     <ul class="nav">
                         <li class="active"><a href="#">Home</a></li>
                         <li><a href="#upload">Upload</a></li>
+                        <li><a href="#add-track">Add track</a></li>
                     </ul>
                 </div>
+                <form id="add-track-control" class="form-inline hide">
+                    <input type="text" class="input-small" placeholder="Track name">
+                    Length: <span id="track-length"></span> km
+                    <button id="add-track-button" class="btn" type="button">Add</button>
+                </form>
 
                 <div class="pull-right">
                     <div id="login-control">
