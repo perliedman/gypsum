@@ -1,5 +1,7 @@
 # Gypsum
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/perliedman/gypsum.svg)](https://greenkeeper.io/)
+
 Gypsum lets you upload tracks from your GPS (or something) using GPX format, stores them in a database and displays them on a map together with a bunch of statistics.
 
 Multiple users are supported, you can get basic statistics for each user per month, etc.
